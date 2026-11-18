@@ -1,0 +1,446 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Design Patterns API Test Suite",
+    "description": "Production-ready test collection for Creational, Structural, and Behavioral Design Patterns in Node.js & TypeScript.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Creational Patterns",
+      "item": [
+        {
+          "name": "Singleton - Get Pool Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/singleton/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "singleton", "status"]
+            },
+            "description": "Retrieves the single shared DatabasePoolManager status, checking connection health, active connections, and pool limits."
+          },
+          "response": []
+        },
+        {
+          "name": "Singleton - Execute Query on Shared Pool",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sql\": \"SELECT * FROM users WHERE active = true\",\n  \"params\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/singleton/query",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "singleton", "query"]
+            },
+            "description": "Executes a query through the singleton pool. Returns isExactSameReference=true verifying reference identity."
+          },
+          "response": []
+        },
+        {
+          "name": "Factory Method - Send Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"email\",\n  \"recipient\": \"user@example.com\",\n  \"subject\": \"Account Security Alert\",\n  \"body\": \"Your password was successfully updated.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/factory-method/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "factory-method", "send"]
+            },
+            "description": "Uses Factory Method resolver to instantiate EmailDispatcher and EmailNotificationChannel."
+          },
+          "response": []
+        },
+        {
+          "name": "Factory Method - Send SMS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"sms\",\n  \"recipient\": \"+15550192834\",\n  \"body\": \"Your one-time login code is 894321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/factory-method/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "factory-method", "send"]
+            },
+            "description": "Uses Factory Method resolver to instantiate SMSDispatcher and Twilio gateway product."
+          },
+          "response": []
+        },
+        {
+          "name": "Factory Method - Send Slack Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel\": \"slack\",\n  \"recipient\": \"#dev-deployments\",\n  \"body\": \"Production release v2.4.0 deployed successfully.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/factory-method/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "factory-method", "send"]
+            },
+            "description": "Uses Factory Method to route notification to Slack webhooks."
+          },
+          "response": []
+        },
+        {
+          "name": "Abstract Factory - AWS Media Pipeline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"aws\",\n  \"fileName\": \"quarterly-report.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/abstract-factory/process-media",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "abstract-factory", "process-media"]
+            },
+            "description": "Resolves the AWS suite family: S3 Storage + SQS Queue + CloudFront CDN invalidation."
+          },
+          "response": []
+        },
+        {
+          "name": "Abstract Factory - Local Mock Pipeline (Offline CI/Dev)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"local\",\n  \"fileName\": \"offline-test-asset.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/abstract-factory/process-media",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "abstract-factory", "process-media"]
+            },
+            "description": "Resolves Local suite family: Local disk + In-memory queue + Mock CDN without external credentials."
+          },
+          "response": []
+        },
+        {
+          "name": "Builder - Fluent Custom Article Construction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Architecting Scalable Node.js Microservices\",\n  \"content\": \"Designing high throughput systems requires reliable fault isolation, rate limiting, and database connection pooling strategies.\",\n  \"author\": \"Principal Architect\",\n  \"summary\": \"Comprehensive architectural patterns for distributed microservices.\",\n  \"tags\": [\"architecture\", \"nodejs\", \"microservices\"],\n  \"featuredImage\": \"https://cdn.example.com/banner.png\",\n  \"galleryImages\": [\n    \"https://cdn.example.com/fig1.png\",\n    \"https://cdn.example.com/fig2.png\"\n  ],\n  \"seo\": {\n    \"metaTitle\": \"Node.js Microservices Architecture Guide\",\n    \"metaDescription\": \"Master production distributed systems architecture.\",\n    \"keywords\": [\"microservices\", \"scaling\", \"nodejs\"]\n  },\n  \"isFeatured\": true,\n  \"publish\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/builder/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "builder", "create"]
+            },
+            "description": "Builds complex Article aggregate using fluent method chaining, auto-generating slug, reading time, and audit fields."
+          },
+          "response": []
+        },
+        {
+          "name": "Builder - Director Recipe (Breaking News)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Global Cloud Outage Mitigated Successfully\",\n  \"content\": \"Engineers deployed an automated rollback script within 4 minutes.\",\n  \"author\": \"Site Reliability Engineering\",\n  \"featuredImage\": \"https://cdn.example.com/sre-alert.jpg\",\n  \"recipe\": \"news-breaking\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/builder/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "builder", "create"]
+            },
+            "description": "Constructs an article using ArticleDirector.constructNewsBreakingPost pre-packaged recipe."
+          },
+          "response": []
+        },
+        {
+          "name": "Prototype - List Blueprint Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/prototype/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prototype", "templates"]
+            },
+            "description": "Lists in-memory registered campaign blueprints ('black-friday', 'product-launch')."
+          },
+          "response": []
+        },
+        {
+          "name": "Prototype - Deep Clone Blueprint with Custom Overrides",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"templateKey\": \"black-friday\",\n  \"newName\": \"Cyber Monday 2026 Mega Sale\",\n  \"overrideCustomFields\": {\n    \"discountPercent\": 70,\n    \"promoCode\": \"CYBER70\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/prototype/clone",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "prototype", "clone"]
+            },
+            "description": "Performs true deep clone of the in-memory prototype without modifying the master template."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Structural Patterns",
+      "item": [
+        {
+          "name": "Adapter - Process Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 199.99,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/adapter/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "adapter", "process"]
+            },
+            "description": "Adapts LegacyPaymentGateway (cents-based XML-like interface) to modern PaymentProcessor (dollars-based JSON interface)."
+          },
+          "response": []
+        },
+        {
+          "name": "Composite - Create Hierarchical Article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Mastering Software Architecture\",\n  \"content\": \"Comprehensive overview\",\n  \"sections\": [\n    {\n      \"title\": \"Section 1: Creational Patterns\",\n      \"paragraphs\": [\n        \"Singleton manages single instances.\",\n        \"Factory method delegates creation.\"\n      ]\n    },\n    {\n      \"title\": \"Section 2: Structural Patterns\",\n      \"paragraphs\": [\n        \"Adapter translates interfaces.\",\n        \"Composite treats trees uniformly.\"\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/composite/create-article",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "composite", "create-article"]
+            },
+            "description": "Treats individual Paragraph leaves and Section/Article composite nodes uniformly using the Composite Pattern."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Behavioral Patterns",
+      "item": [
+        {
+          "name": "Chain of Responsibility - Valid Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer valid-token-123"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/chain-of-responsibility/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chain-of-responsibility", "process"]
+            },
+            "description": "Passes request through the chain: AuthenticationHandler -> ValidationHandler -> LoggingHandler -> ErrorHandler."
+          },
+          "response": []
+        },
+        {
+          "name": "Chain of Responsibility - Missing Auth Token (Short-Circuit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/chain-of-responsibility/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "chain-of-responsibility", "process"]
+            },
+            "description": "Demonstrates short-circuiting at the AuthenticationHandler when the Authorization header is missing."
+          },
+          "response": []
+        },
+        {
+          "name": "Command - Execute Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Charlie Brown\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/command/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "command", "create"]
+            },
+            "description": "Encapsulates request as CreateUserCommand, pushes to invoker history stack, and executes."
+          },
+          "response": []
+        },
+        {
+          "name": "Command - Undo Last Action",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/command/undo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "command", "undo"]
+            },
+            "description": "Pops last command from history and triggers its undo() method, restoring previous state."
+          },
+          "response": []
+        },
+        {
+          "name": "Command - Redo Action",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/command/redo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "command", "redo"]
+            },
+            "description": "Pops from redo stack and re-executes the command."
+          },
+          "response": []
+        },
+        {
+          "name": "Command - Get Command History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/command/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "command", "history"]
+            },
+            "description": "Inspects current invoker undo/redo history state."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
