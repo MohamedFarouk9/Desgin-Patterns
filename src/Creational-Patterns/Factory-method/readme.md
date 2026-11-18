@@ -123,11 +123,11 @@ sequenceDiagram
 ## 5. 🧪 How to Test
 
 ### Prerequisites
+Make sure the server is running on port 3000 (default) or the configured port:
 ```bash
-# Build and start the server
-npm run build
-npm start
-# Server runs on http://localhost:3000
+npm run dev
+# or
+npx tsc && node ./dist/server.js
 ```
 
 ### Test 1: Send Email Notification
@@ -137,12 +137,25 @@ curl -X POST http://localhost:3000/api/factory-method/send \
   -d '{
     "channel": "email",
     "recipient": "user@example.com",
-    "subject": "Welcome!",
-    "body": "Thanks for signing up."
+    "subject": "Account Verification",
+    "body": "Your verification code is 894321"
   }'
 ```
-
-**Expected Result:** Returns `{"success": true, "channel": "email", "messageId": "msg_...", "sentAt": "..."}`
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ Notification dispatched successfully via Factory Method (email)",
+  "result": {
+    "success": true,
+    "channel": "email",
+    "messageId": "email_...",
+    "details": {
+      "smtpServer": "smtp.sendgrid.net",
+      "recipient": "user@example.com"
+    }
+  }
+}
+```
 
 ### Test 2: Send SMS Notification
 ```bash
@@ -151,47 +164,91 @@ curl -X POST http://localhost:3000/api/factory-method/send \
   -d '{
     "channel": "sms",
     "recipient": "+15551234567",
-    "body": "Your OTP is 123456"
+    "body": "Your security code is 432198"
   }'
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ Notification dispatched successfully via Factory Method (sms)",
+  "result": {
+    "success": true,
+    "channel": "sms",
+    "messageId": "sms_...",
+    "details": {
+      "provider": "Twilio",
+      "recipient": "+15551234567"
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `{"success": true, "channel": "sms", "messageId": "sms_...", "sentAt": "..."}`
-
-### Test 3: Send Push Notification
+### Test 3: Send Mobile Push Notification
 ```bash
 curl -X POST http://localhost:3000/api/factory-method/send \
   -H "Content-Type: application/json" \
   -d '{
     "channel": "push",
-    "recipient": "device_token_abc123",
-    "title": "New Message",
-    "body": "You have a new message from John"
+    "recipient": "fcm_device_token_xyz987",
+    "subject": "New Order Alert",
+    "body": "You received an order for item #1098"
   }'
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ Notification dispatched successfully via Factory Method (push)",
+  "result": {
+    "success": true,
+    "channel": "push",
+    "messageId": "push_...",
+    "details": {
+      "service": "Firebase Cloud Messaging",
+      "deviceToken": "fcm_device_token_xyz987"
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `{"success": true, "channel": "push", "messageId": "push_...", "sentAt": "..."}`
-
-### Test 4: Send Slack Notification
+### Test 4: Send Slack Webhook Notification
 ```bash
 curl -X POST http://localhost:3000/api/factory-method/send \
   -H "Content-Type: application/json" \
   -d '{
     "channel": "slack",
-    "recipient": "#general",
-    "body": "Deployment completed successfully! 🚀"
+    "recipient": "#devops-deployments",
+    "body": "Production deploy v2.4.0 completed successfully."
   }'
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ Notification dispatched successfully via Factory Method (slack)",
+  "result": {
+    "success": true,
+    "channel": "slack",
+    "messageId": "slack_...",
+    "details": {
+      "platform": "Slack Bot",
+      "target": "#devops-deployments"
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `{"success": true, "channel": "slack", "messageId": "slack_...", "sentAt": "..."}`
-
-### Test 5: Invalid Channel (Error Handling)
+### Test 5: Invalid Channel (Error Handling & OCP Boundary)
 ```bash
 curl -X POST http://localhost:3000/api/factory-method/send \
   -H "Content-Type: application/json" \
   -d '{
-    "channel": "invalid",
-    "recipient": "test@test.com"
+    "channel": "carrier-pigeon",
+    "recipient": "rooftop-nest",
+    "body": "Hello world"
   }'
 ```
-
-**Expected Result:** Returns `400 Bad Request` with error: `"Unknown channel: invalid. Available: email, sms, push, slack"`
+**Expected Response (400 Bad Request):**
+```json
+{
+  "error": "Unsupported notification channel: \"carrier-pigeon\". Allowed: email, sms, push, slack."
+}
+```

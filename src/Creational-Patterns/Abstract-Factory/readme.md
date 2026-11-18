@@ -136,71 +136,100 @@ sequenceDiagram
 ## 5. 🧪 How to Test
 
 ### Prerequisites
+Make sure the server is running on port 3000 (default):
 ```bash
-# Build and start the server
-npm run build
-npm start
-# Server runs on http://localhost:3000
+npm run dev
+# or
+npx tsc && node ./dist/server.js
 ```
 
-### Test 1: Process Media with AWS Factory (Default)
+### Test 1: Process Media Pipeline with AWS Infrastructure Family
 ```bash
 curl -X POST http://localhost:3000/api/abstract-factory/process-media \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "aws",
-    "fileName": "product-image.png",
-    "fileContentBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    "fileName": "enterprise-report.pdf"
   }'
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ End-to-end media pipeline executed using Abstract Factory (aws)",
+  "pipelineResults": {
+    "storage": {
+      "fileUrl": "https://production-cms-assets.s3.amazonaws.com/enterprise-report.pdf",
+      "storageId": "s3_arn_..."
+    },
+    "queue": {
+      "jobId": "sqs_msg_...",
+      "status": "queued"
+    },
+    "cdn": {
+      "purged": true,
+      "timestamp": "..."
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `PipelineResult` with:
-- `provider: "aws"`
-- `pipelineResults.storage.fileUrl` pointing to `https://aws-storage.example.com/...`
-- `pipelineResults.queue.jobId` starting with `aws_queue_`
-- `pipelineResults.cdn.purged: true`
-
-### Test 2: Process Media with GCP Factory
+### Test 2: Process Media Pipeline with GCP (Google Cloud Platform) Family
 ```bash
 curl -X POST http://localhost:3000/api/abstract-factory/process-media \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "gcp",
-    "fileName": "document.pdf",
-    "fileContentBase64": "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoK..."
+    "fileName": "avatar.png"
   }'
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ End-to-end media pipeline executed using Abstract Factory (gcp)",
+  "pipelineResults": {
+    "storage": {
+      "fileUrl": "https://storage.googleapis.com/gcp-cms-media/avatar.png",
+      "storageId": "gcs_obj_..."
+    },
+    "queue": {
+      "jobId": "pubsub_id_...",
+      "status": "published"
+    },
+    "cdn": {
+      "purged": true,
+      "timestamp": "..."
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `PipelineResult` with GCP-specific identifiers:
-- `provider: "gcp"`
-- Storage URL: `https://gcp-storage.example.com/...`
-- Queue jobId: `gcp_queue_...`
-
-### Test 3: Process Media with Local Factory (No Cloud Credentials Needed)
+### Test 3: Process Media Pipeline with Local / On-Premise Mock Family (CI & Dev Offline)
 ```bash
 curl -X POST http://localhost:3000/api/abstract-factory/process-media \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "local",
-    "fileName": "test-image.jpg",
-    "fileContentBase64": "/9j/4AAQSkZJRgABAQEAYABgAAD..."
+    "fileName": "offline-fixture.json"
   }'
 ```
-
-**Expected Result:** Returns `PipelineResult` with local mock identifiers:
-- `provider: "local"`
-- Storage URL: `https://local-storage.example.com/...`
-- Queue jobId: `local_queue_...`
-- Works completely offline - no cloud API calls made
-
-### Test 4: Invalid Provider (Error Handling)
-```bash
-curl -X POST http://localhost:3000/api/abstract-factory/process-media \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider": "invalid-provider",
-    "fileName": "test.txt"
-  }'
+**Expected Response (200 OK):**
+```json
+{
+  "message": "✅ End-to-end media pipeline executed using Abstract Factory (local)",
+  "pipelineResults": {
+    "storage": {
+      "fileUrl": "http://localhost:4000/static/offline-fixture.json",
+      "storageId": "local_file_..."
+    },
+    "queue": {
+      "jobId": "mem_job_...",
+      "status": "queued"
+    },
+    "cdn": {
+      "purged": true,
+      "timestamp": "..."
+    }
+  }
+}
 ```
-
-**Expected Result:** Returns `400 Bad Request` with error: `"Unknown provider: invalid-provider. Available: aws, gcp, local"`
+*Note: The local factory executes completely in-memory and on local disk without requiring any external cloud network credentials.*

@@ -108,78 +108,124 @@ sequenceDiagram
 ## 5. 🧪 How to Test
 
 ### Prerequisites
+Make sure the server is running on port 3000 (default):
 ```bash
-# Build and start the server
-npm run build
-npm start
-# Server runs on http://localhost:3000
+npm run dev
+# or
+npx tsc && node ./dist/server.js
 ```
 
-### Test 1: List Available Templates
+### Test 1: List Available Master Blueprints in Registry
 ```bash
 curl -X GET http://localhost:3000/api/prototype/templates
 ```
+**Expected Response (200 OK):**
+```json
+{
+  "message": "Available prototype templates in registry",
+  "templates": [
+    "black-friday",
+    "product-launch"
+  ]
+}
+```
 
-**Expected Result:** Returns list of available templates (e.g., "black-friday", "summer-sale", "newsletter-weekly") with their section counts and metadata.
-
-### Test 2: Clone a Template (Black Friday Campaign)
+### Test 2: Clone "Black Friday" Blueprint with Custom Modifications
 ```bash
 curl -X POST http://localhost:3000/api/prototype/clone \
   -H "Content-Type: application/json" \
   -d '{
     "templateKey": "black-friday",
-    "newName": "Cyber Monday 2026 Campaign",
-    "overrides": {
-      "themeColor": "#8B5CF6",
-      "promoCode": "CYBER2026"
+    "newName": "Cyber Monday Super Sale 2026",
+    "overrideCustomFields": {
+      "discountPercent": 65,
+      "promoCode": "CYBER65"
     }
   }'
 ```
+**Expected Response (201 Created):**
+```json
+{
+  "message": "✅ Prototype cloned successfully from blueprint: \"black-friday\"",
+  "clonedDocument": {
+    "id": "tpl_...",
+    "name": "Cyber Monday Super Sale 2026",
+    "themeColor": "#FF0033",
+    "sections": [
+      { "heading": "Hero Banner", "body": "50% Off Everything this Weekend", "order": 1 },
+      { "heading": "Featured Collection", "body": "Hand-picked gadgets and electronics", "order": 2 },
+      { "heading": "Terms & Conditions", "body": "Offer valid while stocks last", "order": 3 }
+    ],
+    "metadata": {
+      "category": "Marketing",
+      "version": 1,
+      "permissions": {
+        "canEdit": ["marketing-lead"],
+        "canView": ["all-staff"]
+      },
+      "customFields": {
+        "discountPercent": 65,
+        "promoCode": "CYBER65"
+      }
+    }
+  }
+}
+```
 
-**Expected Result:** Returns a fully cloned `CampaignDocumentTemplate` with:
-- New unique `id` (not the same as master)
-- Updated `name: "Cyber Monday 2026 Campaign"`
-- Updated `themeColor: "#8B5CF6"`
-- Deep-copied `sections` array (independent from master)
-- Deep-copied `metadata.permissions` arrays (independent from master)
-
-### Test 3: Clone Summer Sale Template
+### Test 3: Clone "Product Launch" Blueprint
 ```bash
 curl -X POST http://localhost:3000/api/prototype/clone \
   -H "Content-Type: application/json" \
   -d '{
-    "templateKey": "summer-sale",
-    "newName": "End of Season Clearance",
-    "overrides": {
-      "themeColor": "#F97316"
+    "templateKey": "product-launch",
+    "newName": "Alpha AI Platform Launch",
+    "overrideCustomFields": {
+      "tier": "Global Enterprise Tier",
+      "sla": "99.999%"
     }
   }'
 ```
-
-### Test 4: Verify Deep Clone Independence (Mutation Test)
-```bash
-# Step 1: Clone the template
-curl -X POST http://localhost:3000/api/prototype/clone \
-  -H "Content-Type: application/json" \
-  -d '{"templateKey": "black-friday", "newName": "Test Clone"}'
-# Note the returned clone's ID
-
-# Step 2: Clone again from same template
-curl -X POST http://localhost:3000/api/prototype/clone \
-  -H "Content-Type: application/json" \
-  -d '{"templateKey": "black-friday", "newName": "Test Clone 2"}'
+**Expected Response (201 Created):**
+```json
+{
+  "message": "✅ Prototype cloned successfully from blueprint: \"product-launch\"",
+  "clonedDocument": {
+    "name": "Alpha AI Platform Launch",
+    "themeColor": "#0066FF",
+    "metadata": {
+      "category": "Product",
+      "customFields": {
+        "tier": "Global Enterprise Tier",
+        "sla": "99.999%"
+      }
+    }
+  }
+}
 ```
 
-**Expected Result:** Both clones have different `id` values and independent `sections` arrays. Modifying one clone's sections does NOT affect the other clone or the master template in the registry.
+### Test 4: Verify Master Prototype State Independence (Deep Copy Check)
+```bash
+# Clone the same template a second time
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateKey": "black-friday"
+  }'
+```
+**Expected Response (201 Created):**
+The second clone contains the original `"discountPercent": 50` and `"promoCode": "BF50"`. The edits from Test 2 did **not** contaminate or mutate the master prototype in the registry!
 
-### Test 5: Invalid Template Key (Error Handling)
+### Test 5: Missing / Invalid Template Key (Error Handling)
 ```bash
 curl -X POST http://localhost:3000/api/prototype/clone \
   -H "Content-Type: application/json" \
   -d '{
-    "templateKey": "non-existent-template",
-    "newName": "Test"
+    "templateKey": "non-existent-blueprint"
   }'
 ```
-
-**Expected Result:** Returns `404 Not Found` with error: `"Template not found: non-existent-template. Available: black-friday, summer-sale, newsletter-weekly"`
+**Expected Response (404 Not Found):**
+```json
+{
+  "error": "Template prototype with key \"non-existent-blueprint\" not found in registry."
+}
+```

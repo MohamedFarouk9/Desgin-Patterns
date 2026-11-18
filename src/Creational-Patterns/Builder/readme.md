@@ -127,79 +127,121 @@ sequenceDiagram
 ## 5. 🧪 How to Test
 
 ### Prerequisites
+Make sure the server is running on port 3000 (default):
 ```bash
-# Build and start the server
-npm run build
-npm start
-# Server runs on http://localhost:3000
+npm run dev
+# or
+npx tsc && node ./dist/server.js
 ```
 
-### Test 1: Create Article Using Builder (Fluent API)
+### Test 1: Create Full Custom Article (Fluent Builder API)
 ```bash
 curl -X POST http://localhost:3000/api/builder/create \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Getting Started with TypeScript",
-    "content": "TypeScript is a strongly typed superset of JavaScript...",
-    "author": "Jane Developer",
-    "summary": "Learn TypeScript fundamentals in this comprehensive guide.",
-    "tags": ["typescript", "javascript", "programming"],
-    "featuredImage": "https://example.com/typescript-guide.jpg",
-    "galleryImages": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
+    "title": "Architecting Zero Downtime Microservices",
+    "content": "Designing high throughput systems requires reliable fault isolation, rate limiting, and database connection pooling strategies...",
+    "author": "Chief Architect",
+    "summary": "Deep architectural guide to zero-downtime distributed microservices.",
+    "tags": ["microservices", "architecture", "distributed-systems"],
+    "featuredImage": "https://cdn.example.com/system-design.png",
+    "galleryImages": [
+      "https://cdn.example.com/diagram1.png",
+      "https://cdn.example.com/diagram2.png"
+    ],
     "seo": {
-      "metaTitle": "TypeScript Guide for Beginners",
-      "metaDescription": "Master TypeScript with this step-by-step tutorial",
-      "keywords": ["typescript", "tutorial", "guide"],
-      "canonicalUrl": "https://blog.example.com/typescript-guide"
+      "metaTitle": "Zero Downtime Microservices Guide",
+      "metaDescription": "Learn how to build resilient systems with zero downtime.",
+      "keywords": ["architecture", "scaling", "microservices"]
     },
     "isFeatured": true,
-    "published": true
+    "publish": true
   }'
 ```
-
-**Expected Result:** Returns full `ArticleEntity` with auto-generated `id`, `slug`, `readingTimeMinutes`, `auditLog`, and `publishedAt` timestamp.
-
-### Test 2: Create Breaking News Post (Director Recipe)
-```bash
-curl -X POST http://localhost:3000/api/builder/create \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Major Framework Release Announced",
-    "content": "The team behind React has just announced version 19...",
-    "author": "Tech News Team",
-    "featuredImage": "https://cdn.example.com/react19-banner.png",
-    "published": true
-  }'
-```
-
-**Expected Result:** Returns article with `isFeatured: true`, `tags: ["breaking-news", "announcement"]`, and SEO auto-configured for breaking news.
-
-### Test 3: Create SEO-Optimized Post (Director Recipe)
-```bash
-curl -X POST http://localhost:3000/api/builder/create \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Complete Guide to Design Patterns",
-    "content": "Design patterns are reusable solutions to common problems...",
-    "author": "Senior Architect",
-    "summary": "Master all 23 GoF design patterns with real-world examples.",
-    "tags": ["design-patterns", "architecture", "software-engineering"],
-    "seo": {
-      "keywords": ["design patterns", "gof", "software architecture", "best practices"]
+**Expected Response (201 Created):**
+```json
+{
+  "message": "✅ Article created successfully using Fluent Builder Pattern!",
+  "article": {
+    "id": "art_...",
+    "title": "Architecting Zero Downtime Microservices",
+    "slug": "architecting-zero-downtime-microservices",
+    "readingTimeMinutes": 1,
+    "isFeatured": true,
+    "audit": {
+      "status": "published",
+      "createdBy": "Chief Architect"
     },
-    "published": true
-  }'
+    "publishedAt": "..."
+  }
+}
 ```
 
-**Expected Result:** Returns article with enhanced SEO fields and appropriate meta tags.
-
-### Test 4: Validation Error (Missing Required Fields)
+### Test 2: Standardized Breaking News Recipe (ArticleDirector)
 ```bash
 curl -X POST http://localhost:3000/api/builder/create \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Incomplete Article"
+    "title": "Global Cyber Outage Averted by Security Engineers",
+    "content": "A critical patch has resolved the vulnerability across all data centers worldwide...",
+    "author": "Security Team Lead",
+    "featuredImage": "https://cdn.example.com/breaking-news.jpg",
+    "recipe": "news-breaking"
   }'
 ```
+**Expected Response (201 Created):**
+```json
+{
+  "message": "✅ Article assembled via ArticleDirector (Breaking News Recipe)!",
+  "article": {
+    "title": "Global Cyber Outage Averted by Security Engineers",
+    "tags": ["news", "breaking", "hot"],
+    "isFeatured": true,
+    "audit": {
+      "status": "published"
+    }
+  }
+}
+```
 
-**Expected Result:** Returns `400 Bad Request` with validation error: `"content is required"` or `"author is required"`
+### Test 3: Standardized SEO-Optimized Recipe (ArticleDirector)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Mastering GoF Creational Design Patterns in 2026",
+    "content": "Creational design patterns abstract the instantiation process...",
+    "author": "Senior Architect",
+    "summary": "Comprehensive tutorial covering Singleton, Factory, Abstract Factory, Builder, and Prototype.",
+    "tags": ["patterns", "software-design", "typescript"],
+    "recipe": "seo-optimized"
+  }'
+```
+**Expected Response (201 Created):**
+```json
+{
+  "message": "✅ Article assembled via ArticleDirector (SEO Recipe)!",
+  "article": {
+    "seo": {
+      "metaTitle": "Mastering GoF Creational Design Patterns in 2026 | Tech Insights",
+      "metaDescription": "Comprehensive tutorial covering Singleton, Factory, Abstract Factory, Builder, and Prototype.",
+      "keywords": ["patterns", "software-design", "typescript"]
+    }
+  }
+}
+```
+
+### Test 4: Validation Guard (Missing Mandatory Invariants)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Missing Author and Content"
+  }'
+```
+**Expected Response (400 Bad Request):**
+```json
+{
+  "error": "title, content, and author are required."
+}
+```
