@@ -303,3 +303,134 @@ adminHandler.handle(req2 as any, {
 - **Circuit Breaker:** Wrap business logic with circuit breaker
 - **Audit Logging:** Comprehensive audit trail of all lifecycle executions
 - **Configuration-Driven:** Read which hooks to enable from config file
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Authenticated User Registration (Valid Request)
+```bash
+curl -X POST http://localhost:3000/api/template-method/registered \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer valid-token" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "status": "success",
+  "data": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "processedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### Test 2: Authenticated User - Missing Email (Validation Fails)
+```bash
+curl -X POST http://localhost:3000/api/template-method/registered \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer valid-token" \
+  -d '{
+    "name": "John Doe"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"Invalid input"` (validation failed)
+
+### Test 3: Authenticated User - Invalid Auth Token (Auth Fails)
+```bash
+curl -X POST http://localhost:3000/api/template-method/registered \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer invalid-token" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `401 Unauthorized` with error: `"Unauthorized"`
+
+### Test 4: Admin Handler - Valid Admin Request
+```bash
+curl -X POST http://localhost:3000/api/template-method/admin \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer admin-token" \
+  -H "X-Admin-Role: true" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "department": "Engineering"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with formatted admin response:
+```json
+{
+  "status": "success",
+  "title": "Admin Resource",
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "department": "Engineering",
+  "role": "admin",
+  "processedAt": "...",
+  "metadata": { "processedBy": "admin-system" }
+}
+```
+
+### Test 5: Admin Handler - Missing Admin Role Header (Authorization Fails)
+```bash
+curl -X POST http://localhost:3000/api/template-method/admin \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer admin-token" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "department": "Engineering"
+  }'
+```
+
+**Expected Result:** Returns `403 Forbidden` with error: `"Forbidden"`
+
+### Test 6: Admin Handler - Missing Department (Business Rule Fails)
+```bash
+curl -X POST http://localhost:3000/api/template-method/admin \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer admin-token" \
+  -H "X-Admin-Role: true" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com"
+  }'
+```
+
+**Expected Result:** Returns `422 Unprocessable Entity` with error: `"Business rule violation"`
+
+### Test 7: Demo Endpoint (Shows Template Method Flow)
+```bash
+curl -X GET http://localhost:3000/api/template-method/demo
+```
+
+**Expected Result:** Returns explanation of the template method pattern and available endpoints.
+
+### Test 8: Check Server Console Logs
+```bash
+# Run the tests above and observe server console
+# You should see:
+# [APIHandler] POST /api/template-method/registered - success
+# [APIHandler] POST /api/template-method/admin - success
+# ... etc.
+```

@@ -220,3 +220,81 @@ const gcpResult = await gcpFacade.processMedia("banner.png", base64Content);
 - **Retry Logic:** Add retry decorators around service calls
 - **Metrics:** Track pipeline success/failure rates, latency per service
 - **Logging:** Automatic pipeline step logging and timing
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Process Media with AWS (Default)
+```bash
+curl -X POST http://localhost:3000/api/facade/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "aws",
+    "fileName": "product-banner.png",
+    "fileContentBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with:
+- `success: true`
+- `provider: "AWSInfrastructureFactory"`
+- `pipelineResults.storage.fileUrl` pointing to S3 URL
+- `pipelineResults.queue.jobId` starting with `aws_queue_`
+- `pipelineResults.cdn.purged: true`
+
+### Test 2: Process Media with GCP
+```bash
+curl -X POST http://localhost:3000/api/facade/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gcp",
+    "fileName": "document.pdf",
+    "fileContentBase64": "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoK..."
+  }'
+```
+
+### Test 3: Process Media with Local (No Cloud Credentials)
+```bash
+curl -X POST http://localhost:3000/api/facade/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "local",
+    "fileName": "test-image.jpg",
+    "fileContentBase64": "/9j/4AAQSkZJRgABAQEAYABgAAD..."
+  }'
+```
+
+**Expected Result:** Works completely offline - no cloud API calls needed.
+
+### Test 4: Invalid Provider (Error Handling)
+```bash
+curl -X POST http://localhost:3000/api/facade/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "invalid-provider",
+    "fileName": "test.txt"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"Unknown provider: invalid-provider. Available: aws, gcp, local"`
+
+### Test 5: Missing File Name (Auto-generated)
+```bash
+curl -X POST http://localhost:3000/api/facade/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "local",
+    "fileContentBase64": "SGVsbG8gV29ybGQ="
+  }'
+```
+
+**Expected Result:** File name auto-generated as `asset_<timestamp>.png`

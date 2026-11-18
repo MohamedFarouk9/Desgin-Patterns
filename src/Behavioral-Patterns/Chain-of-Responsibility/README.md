@@ -237,3 +237,95 @@ console.log(`Chain result: ${result ? "SUCCESS" : "FAILED"}`);
 - **Circuit Breaker:** Stop chain if handler fails repeatedly
 - **Logging Correlation IDs:** Pass request ID through chain
 - **Priority Ordering:** Configure handler execution order via config file
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Valid Request (Passes All Handlers)
+```bash
+curl -X POST http://localhost:3000/api/chain-of-responsibility/process \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer valid-token-123" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "message": "Request processed successfully through chain",
+  "success": true,
+  "handlersExecuted": ["AuthenticationHandler", "ValidationHandler", "LoggingHandler", "ErrorHandler"]
+}
+```
+
+### Test 2: Missing Auth Token (Short-circuits at Authentication)
+```bash
+curl -X POST http://localhost:3000/api/chain-of-responsibility/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `401 Unauthorized` with error about missing auth token. Chain stops at AuthenticationHandler.
+
+### Test 3: Invalid Auth Token (Short-circuits at Authentication)
+```bash
+curl -X POST http://localhost:3000/api/chain-of-responsibility/process \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer invalid-token" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `401 Unauthorized` with error about invalid token.
+
+### Test 4: Valid Auth but Missing Name (Short-circuits at Validation)
+```bash
+curl -X POST http://localhost:3000/api/chain-of-responsibility/process \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer valid-token-123" \
+  -d '{
+    "email": "john@example.com"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about missing name field.
+
+### Test 5: Valid Auth but Invalid Email (Short-circuits at Validation)
+```bash
+curl -X POST http://localhost:3000/api/chain-of-responsibility/process \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer valid-token-123" \
+  -d '{
+    "name": "John Doe",
+    "email": "invalid-email"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about invalid email format.
+
+### Test 6: Check Server Console Logs
+```bash
+# Run the tests above and observe the server console output
+# You should see log entries from each handler in order:
+# [AuthenticationHandler] Token validated successfully
+# [ValidationHandler] Request validated successfully
+# [LoggingHandler] Processing request: POST /api/chain-of-responsibility/process
+# [ErrorHandler] Request passed all middleware - proceeding to handler
+```

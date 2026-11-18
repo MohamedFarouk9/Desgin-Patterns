@@ -135,3 +135,84 @@ const adapter = new PaymentAdapter(legacyGateway);
 const result = await adapter.processPayment(100, "USD");
 console.log(result);
 // { success: true, transactionId: "legacy_tx_1234567890", amount: 100, currency: "USD", timestamp: "2024..." }
+```
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Process Payment Through Adapter
+```bash
+curl -X POST http://localhost:3000/api/adapter/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 99.99,
+    "currency": "USD"
+  }'
+```
+
+**Expected Result:** Returns payment result with modern Promise-based interface:
+```json
+{
+  "message": "✅ Payment processed via Adapter Pattern",
+  "result": {
+    "success": true,
+    "transactionId": "legacy_tx_1709876543210",
+    "amount": 99.99,
+    "currency": "USD",
+    "timestamp": "2024-03-08T12:34:56.789Z"
+  }
+}
+```
+
+### Test 2: Process Payment in EUR
+```bash
+curl -X POST http://localhost:3000/api/adapter/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 149.50,
+    "currency": "EUR"
+  }'
+```
+
+### Test 3: Process Payment in GBP
+```bash
+curl -X POST http://localhost:3000/api/adapter/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 75.00,
+    "currency": "GBP"
+  }'
+```
+
+### Test 4: Invalid Request (Missing Fields)
+```bash
+curl -X POST http://localhost:3000/api/adapter/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"amount and currency are required."`
+
+### Test 5: Verify Adapter Isolation (Multiple Calls)
+```bash
+# Make multiple requests - each should generate unique transaction IDs
+for i in {1..5}; do
+  curl -X POST http://localhost:3000/api/adapter/process \
+    -H "Content-Type: application/json" \
+    -d '{"amount": 10, "currency": "USD"}'
+  echo ""
+done
+```
+
+**Expected Result:** Each response has a unique `transactionId` (e.g., `legacy_tx_1709876543210`, `legacy_tx_1709876543215`, etc.), proving the adapter creates fresh calls to the legacy gateway each time.

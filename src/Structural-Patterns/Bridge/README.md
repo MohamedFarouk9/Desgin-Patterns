@@ -196,3 +196,84 @@ const gcpImpl = new GCStorageService();
 awsStorage.setImplementation(gcpImpl);
 
 const gcpResult = await awsStorage.uploadFile("logo.png", buffer);
+```
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Process Media with AWS Storage (Default)
+```bash
+curl -X POST http://localhost:3000/api/bridge/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "aws",
+    "fileName": "product-image.png",
+    "fileContentBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with AWS storage:
+- `provider: "aws"`
+- `pipelineResults.storage.fileUrl` pointing to `https://production-cms-assets.s3.amazonaws.com/...`
+- `pipelineResults.storage.storageId` starting with `s3_arn_`
+
+### Test 2: Process Media with GCP Storage
+```bash
+curl -X POST http://localhost:3000/api/bridge/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gcp",
+    "fileName": "document.pdf",
+    "fileContentBase64": "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoK..."
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with GCP storage:
+- `provider: "gcp"`
+- `fileUrl`: `https://storage.googleapis.com/gcp-cms-media/...`
+- `storageId`: `gcs_obj_...`
+
+### Test 3: Process Media with Local Storage (No Cloud Credentials)
+```bash
+curl -X POST http://localhost:3000/api/bridge/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "local",
+    "fileName": "test-image.jpg",
+    "fileContentBase64": "/9j/4AAQSkZJRgABAQEAYABgAAD..."
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with local storage:
+- `provider: "local"`
+- `fileUrl`: `http://localhost:4000/static/...`
+- `storageId`: `local_file_...`
+- Works completely offline - no cloud API calls made
+
+### Test 4: Invalid Provider (Error Handling)
+```bash
+curl -X POST http://localhost:3000/api/bridge/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "invalid-provider",
+    "fileName": "test.txt"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"Unknown provider: invalid-provider. Available: aws, gcp, local"`
+
+### Test 5: Verify Runtime Implementation Switching
+```bash
+# The bridge pattern allows switching implementations at runtime.
+# The API controller creates a new StorageService with the requested implementation each request.
+# To verify, make requests with different providers and observe different URL patterns in responses.
+```

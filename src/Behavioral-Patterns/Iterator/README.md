@@ -248,3 +248,70 @@ while (peekIter.hasNext()) {
 - **Limited Iterator:** Yields only first N elements
 - **Reverse Iterator:** Traverses collection in reverse order
 - **Concurrent Iterator:** Thread-safe iteration with snapshot semantics
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Run Iterator Demo
+```bash
+curl -X GET http://localhost:3000/api/iterator/demo
+```
+
+**Expected Result:** Returns demo output showing:
+- Basic iteration over collection [1, 2, 3, 4, 5]
+- Reset and iterate again
+- Peeking iterator demonstration
+- Elements yielded one by one
+
+### Test 2: Verify Iterator Behavior (Check Server Logs)
+```bash
+# Run the demo and watch the server console
+# You should see:
+# Iterating through collection:
+#   Got: 1
+#   Got: 2
+#   Got: 3
+#   Got: 4
+#   Got: 5
+# Iterating again (reset):
+#   Got: 1
+#   Got: 2
+#   Got: 3
+#   Got: 4
+#   Got: 5
+# Peeking at first element: 1
+# Then normal iteration:
+#   Got: 1
+#   Got: 2
+#   Got: 3
+#   Got: 4
+#   Got: 5
+```
+
+### Test 3: Test Multiple Simultaneous Iterations
+```bash
+# The iterator pattern supports multiple simultaneous iterations
+# over the same collection - each gets its own independent iterator
+```
+
+### Test 4: Test Collection Modification During Iteration (Safe)
+```bash
+# The ArrayCollection returns a copy of data to iterator
+# Modifications to original collection don't affect existing iterators
+# This prevents ConcurrentModificationException-style bugs
+```
+
+### Test 5: Invalid Request
+```bash
+# The iterator demo endpoint doesn't take parameters
+# Any POST to /api/iterator/demo will return 404 or 405
+```

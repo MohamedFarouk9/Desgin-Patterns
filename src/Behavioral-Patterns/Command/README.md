@@ -252,3 +252,93 @@ console.log(`Users after 1 redo: ${userService.getUsers().join(', ')}`);
 - **Persistence:** Save commands to database for crash recovery
 - **Command History UI:** Visual history of operations with undo/redo buttons
 - **Selective Undo:** Undo/redo specific command types, not just last-in-first-out
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Create User (Execute Command)
+```bash
+curl -X POST http://localhost:3000/api/command/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "create",
+    "name": "Alice"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "message": "Command executed: CreateUserCommand",
+  "users": ["Alice"],
+  "historyLength": 1
+}
+```
+
+### Test 2: Create Another User
+```bash
+curl -X POST http://localhost:3000/api/command/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "create",
+    "name": "Bob"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with users: `["Alice", "Bob"]`, historyLength: 2
+
+### Test 3: Delete User
+```bash
+curl -X POST http://localhost:3000/api/command/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "delete",
+    "name": "Alice"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with users: `["Bob"]`, historyLength: 3
+
+### Test 4: Undo Last Command (Undo Delete Alice)
+```bash
+curl -X POST http://localhost:3000/api/command/undo \
+  -H "Content-Type: application/json"
+```
+
+**Expected Result:** Returns `200 OK` with users: `["Alice", "Bob"]` (Alice restored), redoStack: 1
+
+### Test 5: Redo Last Undone Command (Re-delete Alice)
+```bash
+curl -X POST http://localhost:3000/api/command/redo \
+  -H "Content-Type: application/json"
+```
+
+**Expected Result:** Returns `200 OK` with users: `["Bob"]` (Alice deleted again)
+
+### Test 6: Get Command History
+```bash
+curl -X GET http://localhost:3000/api/command/history
+```
+
+**Expected Result:** Returns list of executed commands with types and names.
+
+### Test 7: Invalid Action
+```bash
+curl -X POST http://localhost:3000/api/command/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "invalid-action",
+    "name": "Test"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about invalid action.

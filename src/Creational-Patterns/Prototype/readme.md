@@ -102,3 +102,84 @@ sequenceDiagram
    ```
 2. **Template Registry Cache:**
    `TemplateRegistry.getTemplate(key)` serves ready-to-use clones instantly from memory without hitting the database, drastically reducing latency under high concurrent load.
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: List Available Templates
+```bash
+curl -X GET http://localhost:3000/api/prototype/templates
+```
+
+**Expected Result:** Returns list of available templates (e.g., "black-friday", "summer-sale", "newsletter-weekly") with their section counts and metadata.
+
+### Test 2: Clone a Template (Black Friday Campaign)
+```bash
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateKey": "black-friday",
+    "newName": "Cyber Monday 2026 Campaign",
+    "overrides": {
+      "themeColor": "#8B5CF6",
+      "promoCode": "CYBER2026"
+    }
+  }'
+```
+
+**Expected Result:** Returns a fully cloned `CampaignDocumentTemplate` with:
+- New unique `id` (not the same as master)
+- Updated `name: "Cyber Monday 2026 Campaign"`
+- Updated `themeColor: "#8B5CF6"`
+- Deep-copied `sections` array (independent from master)
+- Deep-copied `metadata.permissions` arrays (independent from master)
+
+### Test 3: Clone Summer Sale Template
+```bash
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateKey": "summer-sale",
+    "newName": "End of Season Clearance",
+    "overrides": {
+      "themeColor": "#F97316"
+    }
+  }'
+```
+
+### Test 4: Verify Deep Clone Independence (Mutation Test)
+```bash
+# Step 1: Clone the template
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{"templateKey": "black-friday", "newName": "Test Clone"}'
+# Note the returned clone's ID
+
+# Step 2: Clone again from same template
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{"templateKey": "black-friday", "newName": "Test Clone 2"}'
+```
+
+**Expected Result:** Both clones have different `id` values and independent `sections` arrays. Modifying one clone's sections does NOT affect the other clone or the master template in the registry.
+
+### Test 5: Invalid Template Key (Error Handling)
+```bash
+curl -X POST http://localhost:3000/api/prototype/clone \
+  -H "Content-Type: application/json" \
+  -d '{
+    "templateKey": "non-existent-template",
+    "newName": "Test"
+  }'
+```
+
+**Expected Result:** Returns `404 Not Found` with error: `"Template not found: non-existent-template. Available: black-friday, summer-sale, newsletter-weekly"`

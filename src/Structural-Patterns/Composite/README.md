@@ -227,3 +227,81 @@ console.log(introSection.operation());
 - **Iterator:** Traverse hierarchy systematically
 - **Security:** Component-level access control
 - **Caching:** Cache operation results at composite level
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Create Article with Composite Structure
+```bash
+curl -X POST http://localhost:3000/api/composite/create-article \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Getting Started with TypeScript",
+    "content": "TypeScript is a strongly typed superset of JavaScript...",
+    "sections": [
+      {
+        "title": "Introduction",
+        "paragraphs": [
+          "Welcome to this comprehensive guide on TypeScript.",
+          "We will cover basics, types, and advanced features."
+        ]
+      },
+      {
+        "title": "Core Concepts",
+        "paragraphs": [
+          "Static typing helps catch errors early.",
+          "Interfaces define object shapes.",
+          "Generics provide reusable components."
+        ]
+      },
+      {
+        "title": "Advanced Topics",
+        "paragraphs": [
+          "Decorators for metadata programming.",
+          "Conditional types for complex type logic."
+        ]
+      }
+    ]
+  }'
+```
+
+**Expected Result:** Returns the full article hierarchy with operation output showing all sections and paragraphs, plus `wordCount` and `readingTimeMinutes`.
+
+### Test 2: Create Simple Article (No Sections)
+```bash
+curl -X POST http://localhost:3000/api/composite/create-article \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Quick Update",
+    "content": "Just a short announcement post."
+  }'
+```
+
+**Expected Result:** Returns article without sections - treated as leaf node.
+
+### Test 3: Verify Uniform Treatment (Sections and Paragraphs)
+```bash
+# The composite pattern treats all components uniformly
+# Sections and Paragraphs both implement operation() method
+# The API automatically traverses the hierarchy
+```
+
+### Test 4: Invalid Request (Missing Title)
+```bash
+curl -X POST http://localhost:3000/api/composite/create-article \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Missing title"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"title is required"`

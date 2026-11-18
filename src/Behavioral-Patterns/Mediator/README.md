@@ -246,3 +246,74 @@ mediator.route(loginMessage);
 - **Dead Letter Queue:** Messages that fail after max retries
 - **Event Sourcing:** Persist all messages for audit and recovery
 - **Rate Limiting:** Per-service rate limiting on message processing
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Login with Valid Token
+```bash
+curl -X POST http://localhost:3000/api/mediator/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "valid-jwt-token-123"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "message": "Login processed via Mediator",
+  "success": true,
+  "userId": "user_1234",
+  "servicesNotified": ["auth", "user", "notification"]
+}
+```
+
+### Test 2: Login with Invalid Token
+```bash
+curl -X POST http://localhost:3000/api/mediator/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "invalid-token"
+  }'
+```
+
+**Expected Result:** Returns `401 Unauthorized` with error about invalid token.
+
+### Test 3: Missing Token
+```bash
+curl -X POST http://localhost:3000/api/mediator/login \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about missing token.
+
+### Test 4: Check Server Console Logs
+```bash
+# Run the tests above and observe server console
+# You should see logs from all three services:
+# [LoginMediator] Registered: auth
+# [LoginMediator] Registered: user
+# [LoginMediator] Registered: notification
+# [AuthService] Token verified for user: user_1234
+# [UserService] User user_1234 login processed, setting session
+# [NotificationService] Sending login notification to user: user_1234
+```
+
+### Test 5: Verify Mediator Decoupling
+```bash
+# The mediator pattern ensures services don't call each other directly
+# AuthService doesn't know about UserService
+# UserService doesn't know about NotificationService
+# All communication goes through LoginMediator
+```

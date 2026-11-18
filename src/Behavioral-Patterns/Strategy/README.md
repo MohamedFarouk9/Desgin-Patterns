@@ -218,3 +218,132 @@ console.log("12 items, 15% off: $${price}"); // $85
 - **Audit Logging:** Track which strategy was applied and when
 - **Caching:** Cache price calculations for frequently requested combinations
 - **Minimum/Maximum Price Enforcement:** Ensure prices stay within valid ranges
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Calculate Price with Regular Pricing (No Discount)
+```bash
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "regular",
+    "basePrice": 100
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "strategy": "RegularPricing",
+  "basePrice": 100,
+  "finalPrice": 100
+}
+```
+
+### Test 2: Calculate Price with Percentage Discount (20% Off)
+```bash
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "percentage",
+    "basePrice": 100,
+    "params": { "discountPercentage": 20 }
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with finalPrice: 80
+
+### Test 3: Calculate Price with Fixed Amount Discount ($15 Off)
+```bash
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "fixed",
+    "basePrice": 100,
+    "params": { "discountAmount": 15 }
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with finalPrice: 85
+
+### Test 4: Calculate Price with Tiered Pricing (Bulk Discount)
+```bash
+# Buy 7 items - qualifies for 10% tier
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "tiered",
+    "basePrice": 100,
+    "params": {
+      "tiers": [
+        { "minQuantity": 5, "discountPercentage": 10 },
+        { "minQuantity": 10, "discountPercentage": 15 }
+      ]
+    },
+    "context": { "quantity": 7 }
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with finalPrice: 90 (10% discount on 7 items)
+
+### Test 5: Tiered Pricing - Higher Tier (12 Items = 15% Off)
+```bash
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "tiered",
+    "basePrice": 100,
+    "params": {
+      "tiers": [
+        { "minQuantity": 5, "discountPercentage": 10 },
+        { "minQuantity": 10, "discountPercentage": 15 }
+      ]
+    },
+    "context": { "quantity": 12 }
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with finalPrice: 85 (15% discount on 12 items)
+
+### Test 6: Get Available Strategies
+```bash
+curl -X GET http://localhost:3000/api/strategies
+```
+
+**Expected Result:** Returns list of available strategy types.
+
+### Test 7: Invalid Strategy
+```bash
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "invalid",
+    "basePrice": 100
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about unknown strategy.
+
+### Test 8: Price Floor (Negative Price Prevention)
+```bash
+# 50% discount on $10 item with $10 fixed discount = -$5, should return $0
+curl -X POST http://localhost:3000/api/strategy/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "strategy": "fixed",
+    "basePrice": 10,
+    "params": { "discountAmount": 15 }
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with finalPrice: 0 (never negative)

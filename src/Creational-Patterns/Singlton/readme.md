@@ -96,3 +96,49 @@ export class DatabasePoolManager {
 1. **Connection Pool Management:** Enforces a maximum connection ceiling (`maxPoolSize`).
 2. **Safe Disconnect / Teardown:** Provides `.close()` to flush pool connections during graceful server shutdown (`SIGTERM`).
 3. **Status Inspection:** Exposes active connections and connection state for health checks (`/health/db`).
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Verify Singleton Instance Sharing
+```bash
+# Check pool status - first call creates the instance
+curl -X GET http://localhost:3000/api/singleton/status
+
+# Check pool status - second call returns same instance
+curl -X GET http://localhost:3000/api/singleton/status
+```
+
+**Expected Result:** Both calls return the same `createdAt` timestamp and `poolSize`, proving the same instance is reused.
+
+### Test 2: Execute Queries on Shared Pool
+```bash
+# Execute a query through the shared pool
+curl -X POST http://localhost:3000/api/singleton/query \
+  -H "Content-Type: application/json" \
+  -d '{"sql": "SELECT * FROM users WHERE active = true"}'
+```
+
+**Expected Result:** Response shows `isExactSameReference: true` confirming both `getInstance()` calls returned the identical object.
+
+### Test 3: Verify Connection Pool Limits
+```bash
+# The pool has maxPoolSize: 10. You can test pool exhaustion by making 
+# more than 10 concurrent requests (requires load testing tool)
+```
+
+### Test 4: Graceful Shutdown
+```bash
+# Send SIGTERM to trigger graceful pool closure
+kill -TERM <server-pid>
+# Check logs for: "[DatabasePoolManager] Pool connections gracefully closed."
+```

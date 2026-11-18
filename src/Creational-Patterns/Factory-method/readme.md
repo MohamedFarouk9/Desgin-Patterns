@@ -117,3 +117,81 @@ sequenceDiagram
 * `NotificationDispatcher`: Declares abstract `createChannel()`. Contains standard dispatch orchestration (`notify(...)`).
 * Subclasses (`EmailDispatcher`, `SMSDispatcher`, etc.) implement `createChannel()`.
 * `NotificationFactoryResolver`: Static registry mapping runtime strings (`"email"`, `"sms"`, `"push"`, `"slack"`) to the corresponding creator.
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Send Email Notification
+```bash
+curl -X POST http://localhost:3000/api/factory-method/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "email",
+    "recipient": "user@example.com",
+    "subject": "Welcome!",
+    "body": "Thanks for signing up."
+  }'
+```
+
+**Expected Result:** Returns `{"success": true, "channel": "email", "messageId": "msg_...", "sentAt": "..."}`
+
+### Test 2: Send SMS Notification
+```bash
+curl -X POST http://localhost:3000/api/factory-method/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "sms",
+    "recipient": "+15551234567",
+    "body": "Your OTP is 123456"
+  }'
+```
+
+**Expected Result:** Returns `{"success": true, "channel": "sms", "messageId": "sms_...", "sentAt": "..."}`
+
+### Test 3: Send Push Notification
+```bash
+curl -X POST http://localhost:3000/api/factory-method/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "push",
+    "recipient": "device_token_abc123",
+    "title": "New Message",
+    "body": "You have a new message from John"
+  }'
+```
+
+**Expected Result:** Returns `{"success": true, "channel": "push", "messageId": "push_...", "sentAt": "..."}`
+
+### Test 4: Send Slack Notification
+```bash
+curl -X POST http://localhost:3000/api/factory-method/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "slack",
+    "recipient": "#general",
+    "body": "Deployment completed successfully! 🚀"
+  }'
+```
+
+**Expected Result:** Returns `{"success": true, "channel": "slack", "messageId": "slack_...", "sentAt": "..."}`
+
+### Test 5: Invalid Channel (Error Handling)
+```bash
+curl -X POST http://localhost:3000/api/factory-method/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "invalid",
+    "recipient": "test@test.com"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"Unknown channel: invalid. Available: email, sms, push, slack"`

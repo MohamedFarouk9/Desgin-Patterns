@@ -219,3 +219,89 @@ console.log(`After redo: "${formState.getCurrentState()}"`); // "555-123-4567"
 - **Persistent Storage:** Save mementos to IndexedDB/localStorage for session recovery
 - **Versioning:** Version mementos for long-term audit trails
 - **Concurrent Access:** Thread-safe history management for multi-user environments
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Save Form State (Initial)
+```bash
+curl -X POST http://localhost:3000/api/memento/form \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "save",
+    "formData": "name=John Doe"
+  }'
+```
+
+**Expected Result:** Returns `200 OK` with:
+```json
+{
+  "message": "Form state saved",
+  "historySize": 1,
+  "currentIndex": 0,
+  "canUndo": false,
+  "canRedo": false
+}
+```
+
+### Test 2: Save Additional Form State
+```bash
+curl -X POST http://localhost:3000/api/memento/form \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "save",
+    "formData": "name=John Doe, email=john@example.com"
+  }'
+```
+
+### Test 3: Save Another Form State
+```bash
+curl -X POST http://localhost:3000/api/memento/form \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "save",
+    "formData": "name=John Doe, email=john@example.com, phone=555-123-4567"
+  }'
+```
+
+### Test 4: Undo Last Change
+```bash
+curl -X POST http://localhost:3000/api/memento/undo \
+  -H "Content-Type: application/json"
+```
+
+**Expected Result:** Returns `200 OK` with restored state showing previous form data.
+
+### Test 5: Redo Undone Change
+```bash
+curl -X POST http://localhost:3000/api/memento/redo \
+  -H "Content-Type: application/json"
+```
+
+**Expected Result:** Returns `200 OK` with restored state showing the phone number again.
+
+### Test 6: Check History Size
+```bash
+# The history size should reflect the number of saved states
+```
+
+### Test 7: Invalid Action
+```bash
+curl -X POST http://localhost:3000/api/memento/form \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "invalid",
+    "formData": "test"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about invalid action.

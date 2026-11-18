@@ -121,3 +121,85 @@ sequenceDiagram
    `build()` performs final verification and hands over the complete `ArticleEntity`.
 4. **Director Recipes:**
    `ArticleDirector` exposes standardized recipes for common article variants like breaking news and SEO-optimized posts.
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Create Article Using Builder (Fluent API)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Getting Started with TypeScript",
+    "content": "TypeScript is a strongly typed superset of JavaScript...",
+    "author": "Jane Developer",
+    "summary": "Learn TypeScript fundamentals in this comprehensive guide.",
+    "tags": ["typescript", "javascript", "programming"],
+    "featuredImage": "https://example.com/typescript-guide.jpg",
+    "galleryImages": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
+    "seo": {
+      "metaTitle": "TypeScript Guide for Beginners",
+      "metaDescription": "Master TypeScript with this step-by-step tutorial",
+      "keywords": ["typescript", "tutorial", "guide"],
+      "canonicalUrl": "https://blog.example.com/typescript-guide"
+    },
+    "isFeatured": true,
+    "published": true
+  }'
+```
+
+**Expected Result:** Returns full `ArticleEntity` with auto-generated `id`, `slug`, `readingTimeMinutes`, `auditLog`, and `publishedAt` timestamp.
+
+### Test 2: Create Breaking News Post (Director Recipe)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Major Framework Release Announced",
+    "content": "The team behind React has just announced version 19...",
+    "author": "Tech News Team",
+    "featuredImage": "https://cdn.example.com/react19-banner.png",
+    "published": true
+  }'
+```
+
+**Expected Result:** Returns article with `isFeatured: true`, `tags: ["breaking-news", "announcement"]`, and SEO auto-configured for breaking news.
+
+### Test 3: Create SEO-Optimized Post (Director Recipe)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Complete Guide to Design Patterns",
+    "content": "Design patterns are reusable solutions to common problems...",
+    "author": "Senior Architect",
+    "summary": "Master all 23 GoF design patterns with real-world examples.",
+    "tags": ["design-patterns", "architecture", "software-engineering"],
+    "seo": {
+      "keywords": ["design patterns", "gof", "software architecture", "best practices"]
+    },
+    "published": true
+  }'
+```
+
+**Expected Result:** Returns article with enhanced SEO fields and appropriate meta tags.
+
+### Test 4: Validation Error (Missing Required Fields)
+```bash
+curl -X POST http://localhost:3000/api/builder/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Incomplete Article"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with validation error: `"content is required"` or `"author is required"`

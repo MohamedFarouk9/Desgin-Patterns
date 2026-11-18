@@ -130,3 +130,77 @@ sequenceDiagram
    `CloudFactoryProvider.getFactory()` reads `process.env.CLOUD_PROVIDER` or a dynamic parameter, enabling zero-code multi-cloud switching.
 3. **Seamless Local Development:**
    `LocalInfrastructureFactory` enables engineers to run the full application pipeline and tests completely offline without third-party network requests.
+
+---
+
+## 5. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Process Media with AWS Factory (Default)
+```bash
+curl -X POST http://localhost:3000/api/abstract-factory/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "aws",
+    "fileName": "product-image.png",
+    "fileContentBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with:
+- `provider: "aws"`
+- `pipelineResults.storage.fileUrl` pointing to `https://aws-storage.example.com/...`
+- `pipelineResults.queue.jobId` starting with `aws_queue_`
+- `pipelineResults.cdn.purged: true`
+
+### Test 2: Process Media with GCP Factory
+```bash
+curl -X POST http://localhost:3000/api/abstract-factory/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "gcp",
+    "fileName": "document.pdf",
+    "fileContentBase64": "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoK..."
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with GCP-specific identifiers:
+- `provider: "gcp"`
+- Storage URL: `https://gcp-storage.example.com/...`
+- Queue jobId: `gcp_queue_...`
+
+### Test 3: Process Media with Local Factory (No Cloud Credentials Needed)
+```bash
+curl -X POST http://localhost:3000/api/abstract-factory/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "local",
+    "fileName": "test-image.jpg",
+    "fileContentBase64": "/9j/4AAQSkZJRgABAQEAYABgAAD..."
+  }'
+```
+
+**Expected Result:** Returns `PipelineResult` with local mock identifiers:
+- `provider: "local"`
+- Storage URL: `https://local-storage.example.com/...`
+- Queue jobId: `local_queue_...`
+- Works completely offline - no cloud API calls made
+
+### Test 4: Invalid Provider (Error Handling)
+```bash
+curl -X POST http://localhost:3000/api/abstract-factory/process-media \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "invalid-provider",
+    "fileName": "test.txt"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error: `"Unknown provider: invalid-provider. Available: aws, gcp, local"`

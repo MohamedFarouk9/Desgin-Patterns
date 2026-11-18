@@ -254,3 +254,76 @@ const rateLimitedRes = new RateLimitingDecorator(cachedRes, (req) => ({ allowed:
 - **Configuration-driven:** Read decorator stack from config file
 - **Error Handling:** Decorators can wrap error handling
 - **Metrics:** Decorators can track usage statistics
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Get API Data with Decorators (Full Stack: Rate Limit + Cache + Logging)
+```bash
+curl -X POST http://localhost:3000/api/decorator/api-data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint": "/api/users",
+    "method": "GET",
+    "query": "?page=1&limit=10"
+  }'
+```
+
+**Expected Result:** Returns decorated response with:
+- Rate limit headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+- Cache indicator in response body
+- Log entries in server console
+
+### Test 2: Second Request (Should Show Cache Hit)
+```bash
+# Make the same request again
+curl -X POST http://localhost:3000/api/decorator/api-data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint": "/api/users",
+    "method": "GET",
+    "query": "?page=1&limit=10"
+  }'
+```
+
+**Expected Result:** Response should indicate cached data (check for `cached: true` or similar in response)
+
+### Test 3: Different Endpoint (Cache Miss)
+```bash
+curl -X POST http://localhost:3000/api/decorator/api-data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint": "/api/products",
+    "method": "GET",
+    "query": "?category=electronics"
+  }'
+```
+
+**Expected Result:** Fresh response (not from cache), rate limit headers updated.
+
+### Test 4: Invalid Request
+```bash
+curl -X POST http://localhost:3000/api/decorator/api-data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint": "/api/test"
+  }'
+```
+
+**Expected Result:** Returns `400 Bad Request` with error about missing required fields.
+
+### Test 5: Verify Decorator Order
+```bash
+# The decorators are applied in this order (outermost to innermost):
+# RateLimitingDecorator -> CachingDecorator -> LoggingDecorator -> BaseExpressResponse
+# Check server console logs to see the execution order
+```

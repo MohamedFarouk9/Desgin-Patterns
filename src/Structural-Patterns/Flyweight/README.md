@@ -230,3 +230,95 @@ console.log(`Unique assets: ${stats.totalUnique}`);
 - **Integration with LRU Cache:** Combine with LRU for eviction policy
 - **CDN Coordination:** Sync flyweight state with CDN cache invalidation
 - **Statistics:** Track request patterns to optimize asset pre-loading
+
+---
+
+## 6. 🧪 How to Test
+
+### Prerequisites
+```bash
+# Build and start the server
+npm run build
+npm start
+# Server runs on http://localhost:3000
+```
+
+### Test 1: Get or Create Asset (First Request Creates New)
+```bash
+curl -X POST http://localhost:3000/api/flyweight/asset-get-or-create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assetId": "logo-primary",
+    "dimensions": "200x200",
+    "format": "PNG",
+    "filePath": "/assets/images/logo.png",
+    "size": 45000
+  }'
+```
+
+**Expected Result:** Returns asset with:
+- `created: true` (new flyweight created)
+- `intrinsicState` with the provided details
+- `extrinsicState` with `requestedBy`, `requestTimestamp`, `cacheLevel`, `priority`
+
+### Test 2: Request Same Asset Again (Returns Shared Instance)
+```bash
+curl -X POST http://localhost:3000/api/flyweight/asset-get-or-create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assetId": "logo-primary",
+    "dimensions": "200x200",
+    "format": "PNG",
+    "filePath": "/assets/images/logo.png",
+    "size": 45000
+  }'
+```
+
+**Expected Result:** Returns asset with `created: false` (same flyweight returned from registry)
+
+### Test 3: Request Same Asset with Different Dimensions (Creates New Flyweight)
+```bash
+curl -X POST http://localhost:3000/api/flyweight/asset-get-or-create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assetId": "logo-primary",
+    "dimensions": "400x400",
+    "format": "PNG",
+    "filePath": "/assets/images/logo.png",
+    "size": 180000
+  }'
+```
+
+**Expected Result:** Returns `created: true` - different intrinsic state (dimensions) creates new flyweight
+
+### Test 4: Get Asset Statistics
+```bash
+curl -X GET http://localhost:3000/api/flyweight/asset-stats
+```
+
+**Expected Result:** Returns:
+```json
+{
+  "totalUnique": 2,
+  "totalRequests": 3
+}
+```
+Shows 2 unique flyweights (200x200 and 400x400) and 3 total requests made.
+
+### Test 5: Request Multiple Different Assets
+```bash
+# Create icon asset
+curl -X POST http://localhost:3000/api/flyweight/asset-get-or-create \
+  -H "Content-Type: application/json" \
+  -d '{"assetId": "icon-home", "dimensions": "24x24", "format": "SVG", "filePath": "/icons/home.svg", "size": 2048}'
+
+# Create font asset
+curl -X POST http://localhost:3000/api/flyweight/asset-get-or-create \
+  -H "Content-Type: application/json" \
+  -d '{"assetId": "font-roboto", "dimensions": "variable", "format": "WOFF2", "filePath": "/fonts/roboto.woff2", "size": 150000}'
+
+# Check stats again
+curl -X GET http://localhost:3000/api/flyweight/asset-stats
+```
+
+**Expected Result:** Stats show `totalUnique: 4` (200x200 logo, 400x400 logo, 24x24 icon, variable font)
