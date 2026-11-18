@@ -1,26 +1,45 @@
 import { Router, type Request, type Response } from "express";
-import { Article } from "../Creational-Patterns/Prototype/Article.js";
+import { TemplateRegistry } from "../Creational-Patterns/Prototype/Article.js";
 
 const router = Router();
 
-router.get("/", (req: Request, res: Response) => {
-    // Creating an original article
-    const originalArticle = new Article(
-    "Understanding Prototype Pattern",
-    "The Prototype Pattern is a creational design pattern that allows cloning objects.",
-    "Mohammed Farouk"
-  );
-
-  // Cloning the original article
-  const clonedArticle = originalArticle.clone();
-  // Modifying the cloned article
-  clonedArticle.title = "Cloned: Understanding Prototype Pattern";
-
-  return res.json({
-    originalArticle,
-    clonedArticle,
+router.get("/templates", (req: Request, res: Response) => {
+  res.json({
+    message: "Available prototype templates in registry",
+    templates: ["black-friday", "product-launch"],
   });
 });
 
+router.post("/clone", (req: Request, res: Response) => {
+  try {
+    const { templateKey, newName, overrideCustomFields } = req.body;
+
+    if (!templateKey) {
+      return res.status(400).json({ error: "templateKey is required ('black-friday' or 'product-launch')." });
+    }
+
+    // 1. Fetch isolated deep-clone from Prototype Registry
+    const clonedDocument = TemplateRegistry.getTemplate(templateKey);
+
+    // 2. Customize the clone without altering the master prototype
+    if (newName) {
+      clonedDocument.name = newName;
+    }
+    if (overrideCustomFields && typeof overrideCustomFields === "object") {
+      clonedDocument.metadata.customFields = {
+        ...clonedDocument.metadata.customFields,
+        ...overrideCustomFields,
+      };
+    }
+
+    return res.status(201).json({
+      message: `✅ Prototype cloned successfully from blueprint: "${templateKey}"`,
+      clonedDocument,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(404).json({ error: message });
+  }
+});
 
 export default router;

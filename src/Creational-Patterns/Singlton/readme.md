@@ -1,117 +1,98 @@
+# 🏛️ Singleton Pattern: Database Connection Pool Manager
 
-```markdown
-# 🔒 Singleton Pattern
+## 1. 🚨 The Real Production Problem
+In server applications (Node.js/Express, microservices), every incoming HTTP request often needs to query a relational or document database (PostgreSQL, MySQL, MongoDB).
 
-## 🎯 Intent
-The **Singleton Pattern** is a **creational design pattern** that ensures a class has **only one instance** throughout the application — and provides a **global point of access** to that instance.
-
-This is useful when you want to **control shared resources** such as a database connection, logger, or configuration service.
-
----
-
-## 💡 Key Concepts
-
-- **Single Instance:** Only one object of the class can exist.
-- **Global Access Point:** The instance can be accessed globally through a static method.
-- **Lazy Initialization:** The instance is created only when needed.
-
----
-
-## 🏗️ Structure
+### What happens without Singleton?
+* Developers instantiate a new database client instance (`new Client()` or `new Pool()`) inside each controller, route, or service function.
+* **Connection Explosion:** A traffic spike of 500 concurrent requests opens 500 open TCP sockets to Postgres. The database quickly exhausts `max_connections` (e.g., throwing `FATAL: sorry, too many clients already`).
+* **Memory Leaks & Latency:** TLS handshakes and connection authentication repeat on every request, spiking latency and memory usage.
 
 ```
-
-src/
-┣ controllers/
-|  |singletonController
-┣ patterns/
-┃ ┣ singleton/
-┃ ┃ ┣ Database.ts
-┃ ┃ ┗ README.md
-┣ app.ts
-┣ server.ts
-
-````
+[Request 1] ──> new DatabasePool() ──> TCP Connection #1 ──┐
+[Request 2] ──> new DatabasePool() ──> TCP Connection #2 ──┼─> [Database Server] (CRASH: max_connections exceeded!)
+[Request 3] ──> new DatabasePool() ──> TCP Connection #3 ──┘
+```
 
 ---
 
-## 🧱 Example
+## 2. 💡 How Singleton Solves It
+The **Singleton Pattern** ensures that a class has **only one instance** throughout the application lifecycle and provides a global, unified point of access to that instance.
 
-### `Database.ts`
-```typescript
-export class Database {
-  private static instance: Database;
-  private connection: string;
+### Solution Architecture:
+* Mark constructor as `private` to prevent arbitrary `new DatabasePoolManager()`.
+* Store a cached static instance `DatabasePoolManager.instance`.
+* Expose `static getInstance()`: creates the pool on the first call and returns the existing pool on subsequent calls.
 
-  // Private constructor to prevent direct instantiation
-  private constructor() {
-    this.connection = "Database connection established!";
-  }
+---
 
-  // Public static method to get the instance
-  public static getInstance(): Database {
-    if (!Database.instance) {
-      Database.instance = new Database();
-      console.log("New Database instance created");
+## 3. 📊 Visual Diagram (Flow & Structure)
+
+### Class Diagram
+```mermaid
+classDiagram
+    class DatabasePoolManager {
+        -static instance: DatabasePoolManager
+        -isConnected: boolean
+        -maxPoolSize: number
+        -activeConnections: number
+        -createdAt: string
+        -constructor()
+        +static getInstance() DatabasePoolManager
+        +query(sql: string, params: any[]) Promise
+        +getStatus() Object
+        +close() Promise
     }
-    return Database.instance;
+```
+
+### Execution Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Controller1 as UserController
+    actor Controller2 as OrderController
+    participant Singleton as DatabasePoolManager
+    participant DB as Postgres Engine
+
+    Controller1->>Singleton: DatabasePoolManager.getInstance()
+    Note over Singleton: Instance does not exist.<br/>Instantiate new pool & establish shared TCP connections.
+    Singleton-->>Controller1: Shared Pool Instance #A
+
+    Controller2->>Singleton: DatabasePoolManager.getInstance()
+    Note over Singleton: Instance already exists.<br/>Return cached Instance #A.
+    Singleton-->>Controller2: Shared Pool Instance #A
+
+    Controller1->>Singleton: query("SELECT * FROM users")
+    Singleton->>DB: Reused Connection from pool
+    DB-->>Singleton: Rows
+    Singleton-->>Controller1: Result
+```
+
+---
+
+## 4. 💻 Code Explanation
+
+### Core Implementation: [DatabaseSingleton.ts](file:///d:/Desgin-Patterns/src/Creational-Patterns/Singlton/DatabaseSingleton.ts)
+```typescript
+export class DatabasePoolManager {
+  private static instance: DatabasePoolManager | null = null;
+
+  // 1. Private constructor: Enforces no external instantiation
+  private constructor() {
+    this.initPool();
   }
 
-  // Example method
-  public query(sql: string) {
-    console.log(`Executing SQL: ${sql}`);
+  // 2. Controlled access point: Returns the same instance everywhere
+  public static getInstance(): DatabasePoolManager {
+    if (!DatabasePoolManager.instance) {
+      DatabasePoolManager.instance = new DatabasePoolManager();
+    }
+    return DatabasePoolManager.instance;
   }
 }
-````
-
----
-
-### Example Usage
-
-```typescript
-import { Database } from "./Database";
-
-// Get single instance
-const db1 = Database.getInstance();
-db1.query("SELECT * FROM users");
-
-// Get same instance
-const db2 = Database.getInstance();
-db2.query("SELECT * FROM products");
-
-console.log(db1 === db2); // ✅ true (both are the same instance)
 ```
 
----
-
-## ✅ Benefits
-
-* Ensures **only one instance** of a class exists.
-* Provides **global access** to the instance.
-* Useful for **shared resources** (e.g., config, logger, cache).
-
----
-
-## ⚠️ Drawbacks
-
-* Can make **unit testing harder** (shared global state).
-* Can introduce **hidden dependencies**.
-* Must be used carefully to avoid **tight coupling**.
-
----
-
-## 🧩 Real-world Analogy
-
-Think of a **database connection**:
-you don’t want every request to create a new connection;
-you just want **one shared connection** reused by all parts of the app.
-
----
-
-## 🧠 When to Use
-
-* When you need a **single access point** to a resource.
-* When managing **global state or configuration**.
-* When multiple instances could cause **resource conflicts**.
-
-```
+### Key Production Features Included:
+1. **Connection Pool Management:** Enforces a maximum connection ceiling (`maxPoolSize`).
+2. **Safe Disconnect / Teardown:** Provides `.close()` to flush pool connections during graceful server shutdown (`SIGTERM`).
+3. **Status Inspection:** Exposes active connections and connection state for health checks (`/health/db`).

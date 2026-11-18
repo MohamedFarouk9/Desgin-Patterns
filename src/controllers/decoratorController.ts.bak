@@ -1,0 +1,63 @@
+import { Router, type Request, type Response } from "express";
+import { ExpressResponse, BaseExpressResponse } from "../Structural-Patterns/Decorator/ExpressResponse.js";
+import { LoggingDecorator } from "../Structural-Patterns/Decorator/LoggingDecorator.js";
+import { CachingDecorator } from "../Structural-Patterns/Decorator/CachingDecorator.js";
+import { RateLimitingDecorator } from "../Structural-Patterns/Decorator/RateLimitingDecorator.js";
+
+const router = Router();
+
+// In-memory cache for demo
+const cache = new Map<string, any>();
+
+router.post("/api/data", (req: Request, res: Response) => {
+  try {
+    // Create base response (in real app, this would be express.Response)
+    const baseResponse = new BaseExpressResponse(res);
+
+    // Compose decorators dynamically at runtime
+    const loggedRes = new LoggingDecorator(baseResponse, (msg) => {
+      console.log(`[Decorator Middleware] ${msg}`);
+    });
+
+    const cachedRes = new CachingDecorator(loggedRes, cache);
+
+    const rateLimitedRes = new RateLimitingDecorator(cachedRes, (req) => ({
+      allowed: true,
+      reset: new Date(Date.now() + 60 * 1000),
+    }));
+
+    // Apply the composed decorator - this is the actual response
+    // In real Express, res is already the Express response object
+    // Here we demonstrate the pattern by calling through the chain
+    rateLimitedRes.json({
+      message: "Data retrieved successfully",
+      cached: cache.has(`response_${Date.now()}`),
+      features: ["rate-limiting", "caching", "logging"],
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/api/demo", (req: Request, res: Response) => {
+  try {
+    // Demo: Show decorator can be added/removed dynamically
+    const baseResponse = new BaseExpressResponse(res);
+
+    // Only add logging and caching, skip rate limiting
+    const loggedRes = new LoggingDecorator(baseResponse, (msg) => console.log(msg));
+    const cachedRes = new CachingDecorator(loggedRes, cache);
+
+    cachedRes.json({
+      demo: "Decorator composition demonstrated",
+      featuresActive: ["logging", "caching"],
+      canAddRateLimiting: true, // Could wrap with RateLimitingDecorator later
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;

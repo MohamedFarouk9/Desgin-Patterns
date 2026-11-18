@@ -1,21 +1,30 @@
-import {Router} from 'express';
-import DatabaseSingleton from '../Creational-Patterns/Singlton/DatabaseSingleton.js';
+import { Router, type Request, type Response } from "express";
+import { DatabasePoolManager } from "../Creational-Patterns/Singlton/DatabaseSingleton.js";
 
 const router = Router();
 
-router.get('/' , (req  , res ) => {
-    const db1 = DatabaseSingleton.getInstance();
-    const db2 = DatabaseSingleton.getInstance();
-    // console.log("DB1 Connection String: ", db1.getConnection());
-    // console.log("DB2 Connection String: ", db2.getConnection());
-    // console.log("Are both instances same? ", db1 === db2);
-
-    res.json({
-        connection: db1.getConnection(),
-        connection2: db2.getConnection(),
-        sameInstance: db1 === db2
-    });
+router.get("/status", (req: Request, res: Response) => {
+  const pool = DatabasePoolManager.getInstance();
+  res.json({
+    message: "✅ Database connection pool status retrieved via Singleton",
+    status: pool.getStatus(),
+  });
 });
 
+router.post("/query", async (req: Request, res: Response) => {
+  const { sql, params } = req.body;
+  const pool1 = DatabasePoolManager.getInstance();
+  const pool2 = DatabasePoolManager.getInstance();
+
+  const isExactSameReference = pool1 === pool2;
+  const result = await pool1.query(sql || "SELECT NOW()", params || []);
+
+  res.json({
+    message: "Query executed successfully on shared pool instance",
+    isExactSameReference,
+    result,
+    poolStatus: pool1.getStatus(),
+  });
+});
 
 export default router;

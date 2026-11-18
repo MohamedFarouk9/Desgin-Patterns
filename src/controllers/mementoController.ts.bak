@@ -1,0 +1,82 @@
+import { Router, type Request, type Response } from "express";
+import { FormState, FormHistory } from "../Behavioral-Patterns/Memento/Memento.js";
+
+const router = Router();
+const formState = new FormState();
+const history = new FormHistory();
+
+// Apply save after each state change for demo
+history.save(formState); // Initial save
+
+router.post("/form/set", (req: Request, res: Response) => {
+  try {
+    const { state } = req.body;
+
+    if (!state) {
+      return res.status(400).json({ error: "state is required." });
+    }
+
+    formState.setState(state);
+    history.save(formState);
+
+    return res.status(200).json({
+      message: "Form state updated",
+      currentState: formState.getCurrentState(),
+      historySize: history.getHistorySize(),
+      canUndo: history.canUndo(),
+      canRedo: history.canRedo(),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.post("/memento/undo", (req: Request, res: Response) => {
+  try {
+    const success = history.undo(formState);
+
+    return res.status(200).json({
+      message: success ? "Undo executed successfully" : "Nothing to undo - at earliest state",
+      currentState: formState.getCurrentState(),
+      canUndo: history.canUndo(),
+      canRedo: history.canRedo(),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.post("/memento/redo", (req: Request, res: Response) => {
+  try {
+    const success = history.redo(formState);
+
+    return res.status(200).json({
+      message: success ? "Redo executed successfully" : "Nothing to redo - at latest state",
+      currentState: formState.getCurrentState(),
+      canUndo: history.canUndo(),
+      canRedo: history.canRedo(),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/memento/history", (req: Request, res: Response) => {
+  try {
+    return res.status(200).json({
+      message: "Form history status",
+      currentState: formState.getCurrentState(),
+      historySize: history.getHistorySize(),
+      canUndo: history.canUndo(),
+      canRedo: history.canRedo(),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;

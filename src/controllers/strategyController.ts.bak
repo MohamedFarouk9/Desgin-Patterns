@@ -1,0 +1,79 @@
+import { Router, type Request, type Response } from "express";
+import { PricingStrategy, RegularPricing, PercentageDiscountPricing, FixedAmountDiscountPricing, TieredPricing, PricingContext } from "../Behavioral-Patterns/Strategy/Strategy.ts";
+
+const router = Router();
+const context = new PricingContext(new RegularPricing());
+
+router.post("/calculate", (req: Request, res: Response) => {
+  try {
+    const { basePrice, strategyType, strategyParams } = req.body;
+
+    if (basePrice === undefined || basePrice === null) {
+      return res.status(400).json({ error: "basePrice is required." });
+    }
+
+    let price = Number(basePrice);
+
+    // Apply the requested strategy
+    switch (strategyType) {
+      case "regular":
+        // Already set to regular pricing
+        break;
+
+      case "percentage-discount":
+        const percentage = strategyParams?.percentage ?? 20;
+        context.setStrategy(new PercentageDiscountPricing(percentage));
+        price = context.executeStrategy(price);
+        break;
+
+      case "fixed-amount":
+        const amount = strategyParams?.amount ?? 15;
+        context.setStrategy(new FixedAmountDiscountPricing(amount));
+        price = context.executeStrategy(price);
+        break;
+
+      case "tiered":
+        const tiers = strategyParams?.tiers ?? [
+          { minQuantity: 5, discountPercentage: 10 },
+          { minQuantity: 10, discountPercentage: 15 }
+        ];
+        context.setStrategy(new TieredPricing(tiers));
+        price = context.executeStrategy(price, strategyParams?.context);
+        break;
+
+      default:
+        context.setStrategy(new RegularPricing());
+        price = context.executeStrategy(price);
+        break;
+    }
+
+    return res.status(200).json({
+      message: "✅ Price calculated via Strategy Pattern",
+      basePrice: Number(basePrice),
+      strategyApplied: strategyType || "regular",
+      finalPrice: price,
+      savings: Number(basePrice) - price,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/strategies", (req: Request, res: Response) => {
+  try {
+    return res.status(200).json({
+      availableStrategies: [
+        { name: "regular", description: "Base price, no discounts" },
+        { name: "percentage-discount", description: "Percentage-based discount" },
+        { name: "fixed-amount", description: "Fixed amount discount" },
+        { name: "tiered", description: "Bulk discounts based on quantity" },
+      ],
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;

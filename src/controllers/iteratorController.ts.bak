@@ -1,0 +1,116 @@
+import { Router, type Request, type Response } from "express";
+import { Aggregate, ArrayIterator, ArrayCollection } from "../Behavioral-Patterns/Iterator/Iterator.js";
+
+const router = Router();
+
+// Demo collection
+const collection = new ArrayCollection([1, 2, 3, 4, 5]);
+
+router.post("/create", (req: Request, res: Response) => {
+  try {
+    const { items } = req.body;
+    if (items && Array.isArray(items)) {
+      items.forEach((item: any) => collection.add(item));
+    }
+    return res.status(201).json({
+      message: "Collection created/updated",
+      items: collection.getData(),
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/iterate-standard", (req: Request, res: Response) => {
+  try {
+    const iterator = collection.createIterator();
+    const results: number[] = [];
+
+    while (iterator.hasNext()) {
+      results.push(iterator.next());
+    }
+
+    return res.status(200).json({
+      message: "Standard iteration through collection",
+      collection: collection.getData(),
+      iteration: results,
+      pattern: "Iterator - hasNext()/next()",
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/iterate-peek", (req: Request, res: Response) => {
+  try {
+    // Create a peeking iterator using closure
+    const iterator = collection.createIterator();
+    const results: number[] = [];
+    const peeked: number[] = [];
+
+    while (iterator.hasNext()) {
+      const peekedValue = iterator.peek();
+      peeked.push(peekedValue);
+      results.push(iterator.next());
+    }
+
+    return res.status(200).json({
+      message: "Iteration with peek capability",
+      collection: collection.getData(),
+      peekedValues: peeked,
+      iteration: results,
+      pattern: "Iterator with Peek",
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/reset-demo", (req: Request, res: Response) => {
+  try {
+    // Reset collection and iterate again
+    const iterator = collection.createIterator();
+
+    const firstRound: number[] = [];
+    while (iterator.hasNext()) {
+      firstRound.push(iterator.next());
+    }
+
+    // Reset iterator
+    // Note: ArrayIterator doesn't have reset in this simple impl,
+    // but we can create a new iterator
+    const newIterator = collection.createIterator();
+    const secondRound: number[] = [];
+    while (newIterator.hasNext()) {
+      secondRound.push(newIterator.next());
+    }
+
+    return res.status(200).json({
+      message: "Iteration demo with reset capability",
+      firstRound,
+      secondRound,
+      pattern: "Iterator - create new iterator for fresh traversal",
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+router.get("/stats", (req: Request, res: Response) => {
+  try {
+    return res.status(200).json({
+      message: "Iterator collection statistics",
+      totalItems: collection.size(),
+      pattern: "Iterator - decouples algorithm from collection",
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;

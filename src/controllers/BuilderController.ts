@@ -1,34 +1,77 @@
-import type { Request, Response } from "express";
-import { ArticleBuilder } from "../Creational-Patterns/Builder/ArticleBuilder.js";
+import { Router, type Request, type Response } from "express";
+import { ArticleBuilder, ArticleDirector } from "../Creational-Patterns/Builder/ArticleBuilder.js";
 
-export const createArticle = (req: Request, res: Response) => {
-  const { title, content, author, tags, image, publish } = req.body;
+const router = Router();
 
-  let builder = new ArticleBuilder(title, content, author);
+router.post("/create", (req: Request, res: Response) => {
+  try {
+    const {
+      title,
+      content,
+      author,
+      summary,
+      tags,
+      featuredImage,
+      galleryImages,
+      seo,
+      isFeatured,
+      publish,
+      recipe,
+    } = req.body;
 
-  if (tags) builder = builder.addTags(tags);
-  if (image) builder = builder.addImage(image);
-  if (publish) builder = builder.publishNow();
+    if (!title || !content || !author) {
+      return res.status(400).json({ error: "title, content, and author are required." });
+    }
 
-  const article = builder.build();
+    // Check if Director recipe was requested
+    if (recipe === "news-breaking") {
+      const article = ArticleDirector.constructNewsBreakingPost(
+        title,
+        content,
+        author,
+        featuredImage || "https://cdn.example.com/breaking-news.jpg"
+      );
+      return res.status(201).json({
+        message: "✅ Article assembled via ArticleDirector (Breaking News Recipe)!",
+        article,
+      });
+    }
 
-  res.status(201).json({
-      message: "✅ Article created successfully using Builder Pattern!",
+    if (recipe === "seo-optimized") {
+      const article = ArticleDirector.constructSEOOptimizedPost(
+        title,
+        content,
+        author,
+        summary || "Default summary",
+        tags || ["general", "insights"]
+      );
+      return res.status(201).json({
+        message: "✅ Article assembled via ArticleDirector (SEO Recipe)!",
+        article,
+      });
+    }
+
+    // Standard Fluent Builder usage
+    const builder = new ArticleBuilder(title, content, author);
+
+    if (summary) builder.setSummary(summary);
+    if (tags && Array.isArray(tags)) builder.addTags(tags);
+    if (featuredImage) builder.setFeaturedImage(featuredImage);
+    if (galleryImages && Array.isArray(galleryImages)) builder.addGalleryImages(galleryImages);
+    if (seo) builder.setSEO(seo);
+    if (isFeatured) builder.markAsFeatured();
+    if (publish) builder.publish();
+
+    const article = builder.build();
+
+    return res.status(201).json({
+      message: "✅ Article created successfully using Fluent Builder Pattern!",
       article,
     });
-};
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(400).json({ error: message });
+  }
+});
 
-
-// exmaple bulk to test it in postman 
-/**
- * 
- * {
-  "title": "My Guide to Patterns",
-  "content": "Builder pattern example content.",
-  "author": "Bob",
-  "tags": ["design-patterns","typescript"],
-  "image": "https://example.com/image.jpg",
-  "publish": true
-}
- * 
- */
+export default router;

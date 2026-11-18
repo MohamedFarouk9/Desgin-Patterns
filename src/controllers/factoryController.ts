@@ -1,33 +1,35 @@
-import {Router} from "express";
-import { NotificationFactory } from "../Creational-Patterns/Factory-method/NotificationFactory.js";
-
-
+import { Router, type Request, type Response } from "express";
+import { NotificationFactoryResolver } from "../Creational-Patterns/Factory-method/NotificationFactory.js";
 
 const router = Router();
 
-router.get('/' , (req , res) => {
+router.post("/send", async (req: Request, res: Response) => {
+  try {
+    const { channel, recipient, subject, body, metadata } = req.body;
 
-    const email = NotificationFactory.createNotification("email");
-    email.send("Sending Email: New article published!");
-
-    const sms = NotificationFactory.createNotification("sms");
-    sms.send("Sending SMS: Check out our latest blog post!");
-
-    const push = NotificationFactory.createNotification("push");
-    push.send("Sending Push Notification: A new video is available now!");
-
-    res.send("Smart CMS API is running with Factory Pattern!");
-});
-
-// Test route for notifications
-router.get('/notify/:type' , (req , res) => {
-    try{
-        console.log(123);
-        const notification = NotificationFactory.createNotification(req.params.type);
-        notification.send(`Test message via ${req.params.type} notification`); 
-    } catch(error){
-        res.status(400).send("Invalid notification type");
+    if (!channel || !recipient || !body) {
+      return res.status(400).json({
+        error: "Missing mandatory fields: 'channel' (email|sms|push|slack), 'recipient', 'body'.",
+      });
     }
+
+    // Use Factory Method to dynamically resolve channel dispatcher
+    const dispatcher = NotificationFactoryResolver.getDispatcher(channel);
+    const result = await dispatcher.notify({
+      recipient,
+      subject,
+      body,
+      metadata,
+    });
+
+    return res.status(200).json({
+      message: `✅ Notification dispatched successfully via Factory Method (${channel})`,
+      result,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(400).json({ error: message });
+  }
 });
 
 export default router;

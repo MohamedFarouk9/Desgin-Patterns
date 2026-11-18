@@ -1,0 +1,43 @@
+import { Router, type Request, type Response } from "express";
+import { LoginMediator } from "../Behavioral-Patterns/Mediator/Mediator.js";
+import { AuthServiceHandler } from "../Behavioral-Patterns/Mediator/AuthServiceHandler.js";
+import { UserServiceHandler } from "../Behavioral-Patterns/Mediator/UserServiceHandler.js";
+import { NotificationServiceHandler } from "../Behavioral-Patterns/Mediator/NotificationServiceHandler.js";
+
+const router = Router();
+
+// Create mediator and register services
+const mediator = new LoginMediator();
+mediator.register("auth", new AuthServiceHandler().handle.bind(new AuthServiceHandler()));
+mediator.register("user", new UserServiceHandler().handle.bind(new UserServiceHandler()));
+mediator.register("notification", new NotificationServiceHandler().handle.bind(new NotificationServiceHandler()));
+
+router.post("/login", (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: "token is required." });
+    }
+
+    const message = {
+      type: "login",
+      from: "frontend",
+      payload: { token },
+      timestamp: new Date().toISOString()
+    };
+
+    mediator.route(message);
+
+    return res.status(200).json({
+      message: "✅ Login processed via Mediator Pattern",
+      token,
+      servicesNotified: ["auth", "user", "notification"],
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;

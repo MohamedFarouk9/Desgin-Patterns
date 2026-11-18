@@ -1,0 +1,59 @@
+import { Router, type Request, type Response } from "express";
+import { APIHandler, AuthenticatedHandler, AdminHandler } from "../Behavioral-Patterns/Template-Method/APIHandler.js";
+
+const router = Router();
+
+// Instantiate handlers
+const authenticatedHandler = new AuthenticatedHandler();
+const adminHandler = new AdminHandler();
+
+// POST /api/registered - uses authenticated handler with template method lifecycle
+router.post("/registered", (req: Request, res: Response) => {
+  try {
+    // The template method handles: validate → auth → authorize → business logic → rules → format → log → respond
+    authenticatedHandler.handle(req, res);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+// POST /api/admin - uses admin handler with template method lifecycle (with overrides)
+router.post("/admin", (req: Request, res: Response) => {
+  try {
+    // Admin handler has stricter validation, auth, authorization + overridden business rules and formatting
+    adminHandler.handle(req, res);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/template/demo - demo showing the template structure
+router.get("/demo", (req: Request, res: Response) => {
+  try {
+    // Demo: show what the template method does internally
+    res.json({
+      message: "Template Method Pattern Demo",
+      lifecycleSteps: [
+        "1. validateInput() - Check required fields",
+        "2. authenticate() - Verify auth token",
+        "3. authorize() - Check permissions",
+        "4. businessLogic() - Execute core logic",
+        "5. validateBusinessRules() - Validate business constraints",
+        "6. formatResponse() - Shape the response",
+        "7. logActivity() - Record the action",
+        "8. send 200 Success response"
+      ],
+      exampleEndpoints: {
+        registered: "POST /api/registered - requires name + email",
+        admin: "POST /api/admin - requires name + email + department + admin auth"
+      }
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    return res.status(500).json({ error: message });
+  }
+});
+
+export default router;
