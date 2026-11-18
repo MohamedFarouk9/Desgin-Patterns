@@ -179,4 +179,3 @@ export function deserializePoolManager(jsonStr: string): DatabasePoolManager {
 export default DatabasePoolManager;
 
 
-export default DatabasePoolManager;
