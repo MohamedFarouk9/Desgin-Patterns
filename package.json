@@ -1,16 +1,18 @@
 {
-  "name": "smart-cms-node-patterns",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "gof-design-patterns-node",
+  "version": "2.0.0",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node ./dist/server.js"
+    "build": "tsc",
+    "start": "node ./dist/server.js",
+    "dev": "tsc && node ./dist/server.js",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [],
+  "keywords": ["design-patterns", "gof", "typescript", "nodejs", "express"],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Simple, production-focused Gang of Four (23) Design Patterns Handbook in Node.js & TypeScript.",
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.1.0"

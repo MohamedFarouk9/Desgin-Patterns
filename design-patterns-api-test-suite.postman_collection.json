@@ -1,446 +1,54 @@
 {
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "Design Patterns API Test Suite",
-    "description": "Production-ready test collection for Creational, Structural, and Behavioral Design Patterns in Node.js & TypeScript.",
+    "name": "GoF 23 Design Patterns Handbook",
+    "description": "Complete Postman collection for all 23 Gang of Four Design Patterns in Node.js + TypeScript.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:3000", "type": "string" }],
   "item": [
     {
-      "name": "1. Creational Patterns",
+      "name": "01. Creational (5)",
       "item": [
-        {
-          "name": "Singleton - Get Pool Status",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/singleton/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "singleton", "status"]
-            },
-            "description": "Retrieves the single shared DatabasePoolManager status, checking connection health, active connections, and pool limits."
-          },
-          "response": []
-        },
-        {
-          "name": "Singleton - Execute Query on Shared Pool",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sql\": \"SELECT * FROM users WHERE active = true\",\n  \"params\": []\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/singleton/query",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "singleton", "query"]
-            },
-            "description": "Executes a query through the singleton pool. Returns isExactSameReference=true verifying reference identity."
-          },
-          "response": []
-        },
-        {
-          "name": "Factory Method - Send Email",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"channel\": \"email\",\n  \"recipient\": \"user@example.com\",\n  \"subject\": \"Account Security Alert\",\n  \"body\": \"Your password was successfully updated.\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/factory-method/send",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "factory-method", "send"]
-            },
-            "description": "Uses Factory Method resolver to instantiate EmailDispatcher and EmailNotificationChannel."
-          },
-          "response": []
-        },
-        {
-          "name": "Factory Method - Send SMS",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"channel\": \"sms\",\n  \"recipient\": \"+15550192834\",\n  \"body\": \"Your one-time login code is 894321\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/factory-method/send",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "factory-method", "send"]
-            },
-            "description": "Uses Factory Method resolver to instantiate SMSDispatcher and Twilio gateway product."
-          },
-          "response": []
-        },
-        {
-          "name": "Factory Method - Send Slack Webhook",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"channel\": \"slack\",\n  \"recipient\": \"#dev-deployments\",\n  \"body\": \"Production release v2.4.0 deployed successfully.\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/factory-method/send",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "factory-method", "send"]
-            },
-            "description": "Uses Factory Method to route notification to Slack webhooks."
-          },
-          "response": []
-        },
-        {
-          "name": "Abstract Factory - AWS Media Pipeline",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"provider\": \"aws\",\n  \"fileName\": \"quarterly-report.pdf\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/abstract-factory/process-media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "abstract-factory", "process-media"]
-            },
-            "description": "Resolves the AWS suite family: S3 Storage + SQS Queue + CloudFront CDN invalidation."
-          },
-          "response": []
-        },
-        {
-          "name": "Abstract Factory - Local Mock Pipeline (Offline CI/Dev)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"provider\": \"local\",\n  \"fileName\": \"offline-test-asset.png\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/abstract-factory/process-media",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "abstract-factory", "process-media"]
-            },
-            "description": "Resolves Local suite family: Local disk + In-memory queue + Mock CDN without external credentials."
-          },
-          "response": []
-        },
-        {
-          "name": "Builder - Fluent Custom Article Construction",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Architecting Scalable Node.js Microservices\",\n  \"content\": \"Designing high throughput systems requires reliable fault isolation, rate limiting, and database connection pooling strategies.\",\n  \"author\": \"Principal Architect\",\n  \"summary\": \"Comprehensive architectural patterns for distributed microservices.\",\n  \"tags\": [\"architecture\", \"nodejs\", \"microservices\"],\n  \"featuredImage\": \"https://cdn.example.com/banner.png\",\n  \"galleryImages\": [\n    \"https://cdn.example.com/fig1.png\",\n    \"https://cdn.example.com/fig2.png\"\n  ],\n  \"seo\": {\n    \"metaTitle\": \"Node.js Microservices Architecture Guide\",\n    \"metaDescription\": \"Master production distributed systems architecture.\",\n    \"keywords\": [\"microservices\", \"scaling\", \"nodejs\"]\n  },\n  \"isFeatured\": true,\n  \"publish\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/builder/create",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "builder", "create"]
-            },
-            "description": "Builds complex Article aggregate using fluent method chaining, auto-generating slug, reading time, and audit fields."
-          },
-          "response": []
-        },
-        {
-          "name": "Builder - Director Recipe (Breaking News)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Global Cloud Outage Mitigated Successfully\",\n  \"content\": \"Engineers deployed an automated rollback script within 4 minutes.\",\n  \"author\": \"Site Reliability Engineering\",\n  \"featuredImage\": \"https://cdn.example.com/sre-alert.jpg\",\n  \"recipe\": \"news-breaking\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/builder/create",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "builder", "create"]
-            },
-            "description": "Constructs an article using ArticleDirector.constructNewsBreakingPost pre-packaged recipe."
-          },
-          "response": []
-        },
-        {
-          "name": "Prototype - List Blueprint Templates",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/prototype/templates",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "prototype", "templates"]
-            },
-            "description": "Lists in-memory registered campaign blueprints ('black-friday', 'product-launch')."
-          },
-          "response": []
-        },
-        {
-          "name": "Prototype - Deep Clone Blueprint with Custom Overrides",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"templateKey\": \"black-friday\",\n  \"newName\": \"Cyber Monday 2026 Mega Sale\",\n  \"overrideCustomFields\": {\n    \"discountPercent\": 70,\n    \"promoCode\": \"CYBER70\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/prototype/clone",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "prototype", "clone"]
-            },
-            "description": "Performs true deep clone of the in-memory prototype without modifying the master template."
-          },
-          "response": []
-        }
+        { "name": "01. Singleton - Status", "request": { "method": "GET", "url": "{{baseUrl}}/api/singleton/status" } },
+        { "name": "01. Singleton - Query", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"sql\":\"SELECT * FROM users\"}" }, "url": "{{baseUrl}}/api/singleton/query" } },
+        { "name": "02. Factory Method - Send Email", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"channel\":\"email\",\"recipient\":\"dev@co.com\",\"subject\":\"Alert\",\"body\":\"Healthy\"}" }, "url": "{{baseUrl}}/api/factory-method/send" } },
+        { "name": "03. Abstract Factory - AWS Media", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"provider\":\"aws\",\"fileName\":\"report.pdf\"}" }, "url": "{{baseUrl}}/api/abstract-factory/process-media" } },
+        { "name": "04. Builder - Create Article", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"title\":\"Node Patterns\",\"content\":\"Full guide\",\"author\":\"Dev\",\"tags\":[\"node\"],\"publish\":true}" }, "url": "{{baseUrl}}/api/builder/create" } },
+        { "name": "05. Prototype - List Templates", "request": { "method": "GET", "url": "{{baseUrl}}/api/prototype/templates" } },
+        { "name": "05. Prototype - Clone Template", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"templateKey\":\"black-friday\",\"newName\":\"Cyber Monday\",\"overrideCustomFields\":{\"promoCode\":\"CYBER70\"}}" }, "url": "{{baseUrl}}/api/prototype/clone" } }
       ]
     },
     {
-      "name": "2. Structural Patterns",
+      "name": "02. Structural (7)",
       "item": [
-        {
-          "name": "Adapter - Process Payment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amount\": 199.99,\n  \"currency\": \"USD\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/adapter/process",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "adapter", "process"]
-            },
-            "description": "Adapts LegacyPaymentGateway (cents-based XML-like interface) to modern PaymentProcessor (dollars-based JSON interface)."
-          },
-          "response": []
-        },
-        {
-          "name": "Composite - Create Hierarchical Article",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Mastering Software Architecture\",\n  \"content\": \"Comprehensive overview\",\n  \"sections\": [\n    {\n      \"title\": \"Section 1: Creational Patterns\",\n      \"paragraphs\": [\n        \"Singleton manages single instances.\",\n        \"Factory method delegates creation.\"\n      ]\n    },\n    {\n      \"title\": \"Section 2: Structural Patterns\",\n      \"paragraphs\": [\n        \"Adapter translates interfaces.\",\n        \"Composite treats trees uniformly.\"\n      ]\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/composite/create-article",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "composite", "create-article"]
-            },
-            "description": "Treats individual Paragraph leaves and Section/Article composite nodes uniformly using the Composite Pattern."
-          },
-          "response": []
-        }
+        { "name": "06. Adapter - Process Payment", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"amount\":199.99,\"currency\":\"USD\"}" }, "url": "{{baseUrl}}/api/adapter/process" } },
+        { "name": "07. Bridge - Critical PagerDuty Alert", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"severity\":\"critical\",\"channel\":\"pagerduty\",\"message\":\"Primary DB down\"}" }, "url": "{{baseUrl}}/api/bridge/alert" } },
+        { "name": "08. Composite - Org Budget Tree", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"engineeringBonus\":10000}" }, "url": "{{baseUrl}}/api/composite/budget" } },
+        { "name": "09. Decorator - Fetch (RateLimit+Cache+Log)", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"userId\":\"u1\",\"resource\":\"orders\"}" }, "url": "{{baseUrl}}/api/decorator/fetch" } },
+        { "name": "10. Facade - Place Order", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"userId\":\"u_99\",\"sku\":\"KEYB-01\",\"qty\":2,\"amount\":199,\"address\":\"Cairo, EG\"}" }, "url": "{{baseUrl}}/api/facade/checkout" } },
+        { "name": "11. Flyweight - Render Shared Asset", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"assetKey\":\"logo-main\",\"page\":\"/pricing\",\"x\":10,\"y\":20}" }, "url": "{{baseUrl}}/api/flyweight/render" } },
+        { "name": "12. Proxy - Financial Report (Finance Role)", "request": { "method": "GET", "header": [{ "key": "x-user-role", "value": "finance" }], "url": "{{baseUrl}}/api/proxy/report?quarter=Q4-2026" } }
       ]
     },
     {
-      "name": "3. Behavioral Patterns",
+      "name": "03. Behavioral (11)",
       "item": [
-        {
-          "name": "Chain of Responsibility - Valid Request",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer valid-token-123"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/chain-of-responsibility/process",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "chain-of-responsibility", "process"]
-            },
-            "description": "Passes request through the chain: AuthenticationHandler -> ValidationHandler -> LoggingHandler -> ErrorHandler."
-          },
-          "response": []
-        },
-        {
-          "name": "Chain of Responsibility - Missing Auth Token (Short-Circuit)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/chain-of-responsibility/process",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "chain-of-responsibility", "process"]
-            },
-            "description": "Demonstrates short-circuiting at the AuthenticationHandler when the Authorization header is missing."
-          },
-          "response": []
-        },
-        {
-          "name": "Command - Execute Create User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Charlie Brown\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/command/create",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "command", "create"]
-            },
-            "description": "Encapsulates request as CreateUserCommand, pushes to invoker history stack, and executes."
-          },
-          "response": []
-        },
-        {
-          "name": "Command - Undo Last Action",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/command/undo",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "command", "undo"]
-            },
-            "description": "Pops last command from history and triggers its undo() method, restoring previous state."
-          },
-          "response": []
-        },
-        {
-          "name": "Command - Redo Action",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/command/redo",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "command", "redo"]
-            },
-            "description": "Pops from redo stack and re-executes the command."
-          },
-          "response": []
-        },
-        {
-          "name": "Command - Get Command History",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/command/history",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "command", "history"]
-            },
-            "description": "Inspects current invoker undo/redo history state."
-          },
-          "response": []
-        }
+        { "name": "13. Chain of Responsibility - Process", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer valid-token-123" }], "body": { "mode": "raw", "raw": "{\"email\":\"alice@co.com\",\"amount\":500}" }, "url": "{{baseUrl}}/api/chain-of-responsibility/process" } },
+        { "name": "14. Command - Create User", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"name\":\"Alice\"}" }, "url": "{{baseUrl}}/api/command/create" } },
+        { "name": "14. Command - Undo", "request": { "method": "POST", "url": "{{baseUrl}}/api/command/undo" } },
+        { "name": "15. Interpreter - Evaluate Rule", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"rule\":\"country == US AND plan == pro\",\"context\":{\"country\":\"US\",\"plan\":\"pro\"}}" }, "url": "{{baseUrl}}/api/interpreter/evaluate" } },
+        { "name": "16. Iterator - Paginated Logs", "request": { "method": "GET", "url": "{{baseUrl}}/api/iterator/demo?pageSize=2" } },
+        { "name": "17. Mediator - Login", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"token\":\"valid-jwt-123\"}" }, "url": "{{baseUrl}}/api/mediator/login" } },
+        { "name": "18. Memento - Save Draft", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"title\":\"Draft v1\"}" }, "url": "{{baseUrl}}/api/memento/save" } },
+        { "name": "18. Memento - Undo Draft", "request": { "method": "POST", "url": "{{baseUrl}}/api/memento/undo" } },
+        { "name": "19. Observer - Order Placed", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"orderId\":\"ORD-900\",\"total\":299.5}" }, "url": "{{baseUrl}}/api/observer/order-placed" } },
+        { "name": "20. State - Pay Order", "request": { "method": "POST", "url": "{{baseUrl}}/api/state/pay" } },
+        { "name": "20. State - Ship Order", "request": { "method": "POST", "url": "{{baseUrl}}/api/state/ship" } },
+        { "name": "21. Strategy - Tiered Pricing", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"strategy\":\"tiered\",\"basePrice\":100,\"qty\":10}" }, "url": "{{baseUrl}}/api/strategy/calculate" } },
+        { "name": "22. Template Method - CSV Import", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"format\":\"csv\",\"data\":\"name,role\\nAlice,Admin\"}" }, "url": "{{baseUrl}}/api/template-method/import" } },
+        { "name": "23. Visitor - Cart Invoice & Tax", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\"laptopPrice\":1500,\"subscriptionMonths\":6}" }, "url": "{{baseUrl}}/api/visitor/invoice" } }
       ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000",
-      "type": "string"
     }
   ]
 }
